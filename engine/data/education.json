@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0",
+  "entries": [
+    {
+      "id": "edu-1",
+      "institution": "Example University",
+      "degree": "B.Sc. Computer Science",
+      "field": "Computer Science",
+      "start_date": "2018-10",
+      "end_date": "2022-06",
+      "gpa": null,
+      "honors": [],
+      "tags": []
+    }
+  ]
+}

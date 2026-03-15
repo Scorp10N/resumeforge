@@ -1,0 +1,26 @@
+{# translate.j2 — Translate resume content to a target locale.
+   Expected context keys:
+     content      (str)  — the text block to translate (bullet, summary, section, etc.)
+     source_lang  (str)  — BCP-47 language code of the source text, e.g. "en"
+     target_lang  (str)  — BCP-47 language code of the desired output, e.g. "he"
+     rtl          (bool) — True if target_lang is a right-to-left language
+     section_type (str)  — hint about what is being translated, e.g. "bullet", "summary"
+#}
+You are a professional translator and resume writing expert.
+
+Translate the following resume {{ section_type }} from {{ source_lang }} to {{ target_lang }}.
+{% if rtl %}
+Note: {{ target_lang }} is written right-to-left. Ensure the output reads naturally in that direction.
+{% endif %}
+
+Translation rules:
+- Preserve all professional terminology accurately
+- Maintain the original tone and level of formality
+- Keep any proper nouns (company names, product names, certifications) unchanged unless they have a well-known local equivalent
+- Do not add or remove information — translate faithfully
+- Output ONLY the translated text, no labels, no explanations, no quotes
+
+Source text:
+{{ content }}
+
+Translated {{ section_type }} (output ONLY the translated text):

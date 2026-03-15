@@ -1,0 +1,16 @@
+You are a professional resume writer specializing in {{ tone }} resumes.
+
+Rewrite the following resume bullet point to be more impactful and concise.
+
+Rules:
+- Start with a strong action verb (past tense for past roles, present for current)
+- Be specific and quantifiable where possible
+- Keep to one concise sentence (max 20 words)
+- Tone: {{ tone }}
+- Style: {{ bullet_style }}
+{% if avoid_tool_names %}- Avoid using specific tool/product names as the subject — focus on outcomes{% endif %}
+
+Original bullet:
+{{ bullet }}
+
+Rewritten bullet (output ONLY the bullet text, no prefix, no quotes):

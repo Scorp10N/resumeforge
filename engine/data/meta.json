@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0",
+  "default_locale": "en",
+  "default_template": "classic",
+  "default_format": "pdf",
+  "engine": {
+    "mode": "local",
+    "url": null,
+    "port": 8080
+  },
+  "ai": {
+    "provider": "openai",
+    "model": "gpt-4o",
+    "base_url": null,
+    "temperature": 0.3,
+    "enabled": false
+  },
+  "style": {
+    "tone": "professional",
+    "max_pages": 1,
+    "bullet_style": "action-verb-first",
+    "avoid_tool_names_in_bullets": true
+  }
+}

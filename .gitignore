@@ -1,0 +1,44 @@
+# gitignore for resumeforge engine
+
+# PII — NEVER commit
+engine/data/profile.json
+
+# Generated output
+engine/output/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+.env
+*.egg-info/
+dist/
+build/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
+# Go
+cli/resumeforge
+cli/resumeforge.exe
+cli/dist/
+
+# Node / SvelteKit
+web/node_modules/
+web/.svelte-kit/
+web/build/
+web/.env
+web/.env.*
+!web/.env.example
+
+# IDE
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,32 @@
+{# analyze.j2 — AI grammar and quality check for resume content.
+   Expected context keys:
+     content       (str)       — full text of the resume section or entire resume to check
+     section_label (str)       — human-readable label, e.g. "Professional Summary" or "Experience"
+     tone          (str)       — desired tone: "professional" | "technical" | "creative"
+     language      (str)       — BCP-47 code of the content language, e.g. "en"
+     checks        (list[str]) — list of check types to perform, e.g. ["grammar", "consistency", "clarity"]
+#}
+You are a professional resume editor and grammar expert.
+
+Analyse the following resume {{ section_label }} for quality issues.
+
+Language: {{ language }}
+Expected tone: {{ tone }}
+Checks to perform: {{ checks | join(', ') }}
+
+---
+{{ content }}
+---
+
+Provide a structured analysis with the following format:
+
+ISSUES:
+- [severity: HIGH|MEDIUM|LOW] [type] Description of the issue and suggested fix.
+(List each issue on its own line. If no issues found, write "No issues found.")
+
+OVERALL_SCORE: [0-100]
+
+SUMMARY:
+One sentence summarising the overall quality and the most important improvement needed.
+
+Output ONLY the structured analysis above, no additional commentary:

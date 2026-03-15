@@ -1,0 +1,34 @@
+{# gap_fill.j2 — Suggest how a candidate can address skill gaps for a target role.
+   Expected context keys:
+     missing_skills   (list[str]) — skills/requirements from the JD not found in the resume
+     profile_summary  (str)       — candidate's current professional summary
+     experience_titles (list[str]) — list of the candidate's past job titles
+     job_title        (str)       — target role title
+     job_company      (str)       — target company name
+     tone             (str)       — desired tone: "professional" | "technical" | "creative"
+#}
+You are a professional career coach and resume strategist.
+
+A candidate is applying for: {{ job_title }} at {{ job_company }}
+
+Candidate background:
+{{ profile_summary }}
+
+Past roles: {{ experience_titles | join(', ') }}
+
+The following required skills or qualifications appear to be missing or under-represented in the candidate's resume:
+{% for skill in missing_skills %}
+- {{ skill }}
+{% endfor %}
+
+For each missing skill, suggest ONE concrete, actionable way the candidate can:
+1. Highlight existing (possibly hidden) experience that covers this gap, OR
+2. Frame existing skills as transferable, OR
+3. Recommend a specific short-term action to close the gap (certification, project, etc.)
+
+Format your response as:
+
+SKILL: [skill name]
+SUGGESTION: [one concrete suggestion in 1-2 sentences]
+
+Repeat for each skill. Output ONLY the structured suggestions above, {{ tone }} tone, no extra commentary:
