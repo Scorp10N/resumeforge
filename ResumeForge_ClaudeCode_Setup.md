@@ -1,63 +1,105 @@
-# ResumeForge — Claude Code Project Setup
+# ResumeForge — Claude Code Project Setup v2.0
 
 ## 1. CLAUDE.md (Root)
 
 ```markdown
 # ResumeForge
 
-Python CLI/TUI/Web tool for automated resume building with AI-powered tailoring.
+Polyglot resume automation platform with standalone clients and a central Python engine.
 
-## Project
-- Python 3.12+, managed with uv
-- Monorepo: single package `resumeforge/`
-- Design spec: see DESIGN.md for full architecture
+## Components
+- `engine/` — Python (FastAPI): core engine, AI, export, analysis, REST API
+- `cli/` — Go (Cobra + Bubble Tea): CLI and TUI client
+- `web/` — TypeScript (SvelteKit): web frontend client
 
-## Commands
+## Architecture
+- Clients communicate with engine via HTTP REST API + SSE streaming
+- Engine runs locally (auto-spawned by CLI) or remotely (cloud edition)
+- See DESIGN.md for full architecture, data model, and API contract
+
+## Engine Commands (run from engine/)
 - `uv run pytest` — run all tests
 - `uv run pytest tests/{module}/ -x` — run one module, stop on first fail
 - `uv run ruff check .` — lint
 - `uv run ruff format .` — format
 - `uv run mypy resumeforge/` — type check
-- `uv run resumeforge --help` — run CLI
+- `uv run uvicorn resumeforge.api.app:app --reload` — start engine dev server
 
-## Code Style
+## CLI Commands (run from cli/)
+- `go build ./...` — build
+- `go test ./...` — run tests
+- `go run main.go --help` — run CLI
+- `goreleaser build --snapshot --clean` — build all platform binaries
+
+## Web Commands (run from web/)
+- `npm install` — install deps
+- `npm run dev` — start dev server
+- `npm run build` — production build
+- `npm run check` — Svelte type check
+
+## Code Style — Engine (Python)
 - Type hints on ALL functions (mypy strict)
 - Pydantic v2 models for all data schemas
-- ABC base classes for pluggable interfaces (exporters, analyzers, providers)
-- Docstrings: Google style, one-liner for simple functions
+- ABC base classes for exporters, analyzers, providers
+- Docstrings: Google style
 - Imports: stdlib → third-party → local, separated by blank line
-- No `Any` types. No bare `except`. No mutable default args.
-- Tests: pytest + pytest-snapshot. Every public function needs a test.
+- No `Any` types. No bare `except`. No mutable defaults.
 
-## Architecture
-- `resumeforge/core/` — shared engine (builder, sections, templates, i18n)
-- `resumeforge/data/` — JSON store + Pydantic schemas
-- `resumeforge/ai/` — LiteLLM wrapper + prompt templates
-- `resumeforge/export/` — MD/PDF/DOCX exporters
-- `resumeforge/analysis/` — ATS scoring, gap analysis, quality checks
-- `resumeforge/cli/` — Typer CLI
-- `resumeforge/tui/` — Textual TUI
-- `resumeforge/web/` — FastAPI + HTMX web UI
+## Code Style — CLI (Go)
+- Follow standard Go fmt/vet conventions
+- Cobra command structs in individual files under cmd/
+- All engine calls go through the client package — never raw HTTP in cmd/
+- Errors returned, not panicked
 
-## Important
-- NEVER commit data/profile.json (PII) — it is gitignored
-- All exporters inherit from `BaseExporter` in export/base.py
-- All analyzers inherit from `BaseAnalyzer` in analysis/base.py
-- AI is optional — everything must work with `ai.enabled: false`
-- JSON schema versions: always check `schema_version` field
-- When compacting, preserve: list of modified files, failing tests, current phase goal
+## Code Style — Web (TypeScript/Svelte)
+- Svelte 5 Runes syntax (`$state`, `$derived`, `$effect`)
+- All engine API calls through `src/lib/api/engine.ts` — never inline fetch
+- TailwindCSS utility classes for styling
+- Components in `src/lib/components/`
+
+## Important Rules
+- NEVER commit engine/data/profile.json (PII) — gitignored
+- All exporters inherit from `BaseExporter` in engine/export/base.py
+- All analyzers inherit from `BaseAnalyzer` in engine/analysis/base.py
+- AI is always optional — everything must work with `ai.enabled: false`
+- Go CLI must never import Python engine code — only HTTP calls
+- Engine API is the single source of truth for all business logic
 ```
 
 ---
 
 ## 2. Sub-directory CLAUDE.md files
 
-### resumeforge/data/CLAUDE.md
+### engine/resumeforge/api/CLAUDE.md
+
+```markdown
+# Engine API Module
+
+FastAPI REST API — the single interface between all clients and the engine.
+
+## Key files
+- `app.py` — FastAPI application, CORS, middleware, OpenAPI config
+- `routes/build.py` — Resume build endpoint + SSE streaming
+- `routes/tailor.py` — AI tailoring endpoint + SSE streaming
+- `routes/analyze.py` — Analysis endpoints
+- `routes/data.py` — CRUD for all data sections
+- `routes/templates.py` — Template list and preview
+
+## Rules
+- All responses use Pydantic response models — no raw dicts
+- Streaming responses use SSE (Server-Sent Events) via `StreamingResponse`
+- Errors return structured JSON: `{"detail": "message", "code": "ERROR_CODE"}`
+- OpenAPI tags match component names (Build, Tailor, Analyze, Data, Templates)
+- CORS allows localhost ports for CLI and web dev server
+- Test with: `uv run pytest tests/test_api.py -x`
+```
+
+### engine/resumeforge/data/CLAUDE.md
 
 ```markdown
 # Data Store Module
 
-JSON-based storage with Pydantic validation. Files live in `data/` at project root.
+JSON-based storage with Pydantic validation. Files live in `engine/data/`.
 
 ## Key files
 - `schema.py` — ALL Pydantic models (Profile, Experience, Skills, Education, Meta, JobDescription)
@@ -66,17 +108,17 @@ JSON-based storage with Pydantic validation. Files live in `data/` at project ro
 
 ## Rules
 - Every JSON field maps to a Pydantic model field — no loose dicts
-- All dates use ISO 8601 strings (YYYY-MM or YYYY-MM-DD), parsed via `date` or `Optional[date]`
+- All dates use ISO 8601 strings (YYYY-MM or YYYY-MM-DD)
 - `store.py` must never import from ai/, export/, or analysis/
 - Test with: `uv run pytest tests/test_data.py -x`
 ```
 
-### resumeforge/ai/CLAUDE.md
+### engine/resumeforge/ai/CLAUDE.md
 
 ```markdown
 # AI Provider Module
 
-LiteLLM-based AI integration. All prompts are Jinja2 templates in `prompts/`.
+LiteLLM-based AI integration. All prompts are Jinja2 templates in prompts/.
 
 ## Key files
 - `provider.py` — LiteLLM wrapper, reads config from meta.json
@@ -88,12 +130,12 @@ LiteLLM-based AI integration. All prompts are Jinja2 templates in `prompts/`.
 ## Rules
 - NEVER hardcode model names — always read from config
 - Every AI call must have a non-AI fallback (return input unchanged)
-- Prompt templates receive a `context` dict — document expected keys in each .j2 file
+- Prompt templates receive a context dict — document expected keys in each .j2
 - Temperature, max_tokens controlled via meta.json, never hardcoded
 - Test with: `uv run pytest tests/test_ai.py -x` (uses mock provider)
 ```
 
-### resumeforge/export/CLAUDE.md
+### engine/resumeforge/export/CLAUDE.md
 
 ```markdown
 # Export Engine
@@ -109,18 +151,17 @@ Renders resume data into MD, PDF, DOCX formats via templates.
 ## Rules
 - All exporters implement `export(context, template, output_path) -> Path`
 - Templates live in `resumeforge/templates/{name}/`
-- DOCX builder: NEVER use unicode bullets, use python-docx numbering
+- DOCX: NEVER use unicode bullets, use python-docx numbering
 - PDF: all styling via CSS, no inline styles
 - Test with: `uv run pytest tests/test_export.py -x`
-- Validate DOCX output opens correctly in LibreOffice
 ```
 
-### resumeforge/analysis/CLAUDE.md
+### engine/resumeforge/analysis/CLAUDE.md
 
 ```markdown
 # Analysis Engine
 
-Runs quality checks on generated resumes and produces reports.
+Quality checks on generated resumes producing a unified report.
 
 ## Key files
 - `base.py` — BaseAnalyzer ABC + AnalysisResult model
@@ -138,6 +179,50 @@ Runs quality checks on generated resumes and produces reports.
 - Test with: `uv run pytest tests/test_analysis.py -x`
 ```
 
+### cli/CLAUDE.md
+
+```markdown
+# CLI / TUI Client
+
+Go application. Cobra CLI + Bubble Tea TUI. Communicates with engine via HTTP.
+
+## Key packages
+- `cmd/` — Cobra command definitions (one file per command group)
+- `tui/` — Bubble Tea TUI application and screens
+- `client/` — Typed HTTP client for engine REST API
+
+## Rules
+- ALL engine communication goes through the `client` package
+- Never use raw http.Get/Post in cmd/ or tui/ — always client.Client methods
+- CLI spawns the Python engine if not running, via `client.EnsureEngine()`
+- Cobra commands return errors — never os.Exit() inside a command
+- SSE streaming: use `client.StreamBuild()` which returns a channel of events
+- Build with: `go build -o resumeforge ./...`
+- Test with: `go test ./...`
+```
+
+### web/CLAUDE.md
+
+```markdown
+# Web Frontend Client
+
+SvelteKit application. Communicates with engine via REST API + SSE.
+
+## Key directories
+- `src/routes/` — SvelteKit file-based pages
+- `src/lib/components/` — Reusable Svelte components
+- `src/lib/api/engine.ts` — Typed engine API client (all fetch calls here)
+- `src/lib/api/types.ts` — TypeScript types matching engine OpenAPI schema
+
+## Rules
+- ALL engine API calls go through `src/lib/api/engine.ts` — never inline fetch
+- Use Svelte 5 Runes: `$state()`, `$derived()`, `$effect()` — NOT legacy stores
+- SSE handled via `engine.streamBuild()` which returns an async iterable
+- Engine base URL read from `VITE_ENGINE_URL` env var (defaults to localhost:8080)
+- TailwindCSS only — no custom CSS unless absolutely necessary
+- Run type check with: `npm run check`
+```
+
 ---
 
 ## 3. Custom Commands
@@ -145,318 +230,263 @@ Runs quality checks on generated resumes and produces reports.
 ### .claude/commands/phase.md
 ```markdown
 Check DESIGN.md for the current build phase and summarize:
-1. What's been completed
+1. What's been completed across engine/, cli/, and web/
 2. What remains for this phase
-3. Suggested next task
+3. Suggested next task and which component it affects
 Do NOT start coding — just report status.
 ```
 
-### .claude/commands/test-module.md
+### .claude/commands/engine-route.md
 ```markdown
-Run tests for $ARGUMENTS module:
-1. `uv run pytest tests/test_$ARGUMENTS.py -x -v`
-2. If failures, show the failing test and the relevant source
-3. Suggest a fix but do NOT apply it without my approval
+Create a new engine API route for $ARGUMENTS:
+1. Read engine/resumeforge/api/CLAUDE.md for conventions
+2. Add route file in engine/resumeforge/api/routes/$ARGUMENTS.py
+3. Register in engine/resumeforge/api/app.py
+4. Add Pydantic request/response models
+5. Write tests in engine/tests/test_api.py
+6. Run tests and fix until green
 ```
 
-### .claude/commands/lint-fix.md
+### .claude/commands/cli-command.md
 ```markdown
-Run the full quality suite and fix issues:
-1. `uv run ruff check . --fix`
-2. `uv run ruff format .`
-3. `uv run mypy resumeforge/`
-4. Report remaining issues that need manual attention
+Create a new CLI command for $ARGUMENTS:
+1. Read cli/CLAUDE.md for conventions
+2. Create cli/cmd/$ARGUMENTS.go with Cobra command
+3. Add any required client methods to cli/client/client.go
+4. Register command in cli/cmd/root.go
+5. Write tests
+6. Run: go test ./...
 ```
 
 ### .claude/commands/new-exporter.md
 ```markdown
-Create a new exporter for the $ARGUMENTS format:
-1. Read `resumeforge/export/base.py` for the interface
-2. Read an existing exporter (markdown.py) for the pattern
-3. Create `resumeforge/export/$ARGUMENTS.py`
-4. Add tests in `tests/test_export.py`
+Create a new engine exporter for format $ARGUMENTS:
+1. Read engine/resumeforge/export/CLAUDE.md
+2. Read base.py for the interface
+3. Create engine/resumeforge/export/$ARGUMENTS.py
+4. Add tests in engine/tests/test_export.py
 5. Register in export/__init__.py
 ```
 
 ### .claude/commands/new-analyzer.md
 ```markdown
-Create a new analyzer called $ARGUMENTS:
-1. Read `resumeforge/analysis/base.py` for the interface
-2. Read an existing analyzer for the pattern
-3. Create `resumeforge/analysis/$ARGUMENTS.py`
-4. Add tests in `tests/test_analysis.py`
+Create a new engine analyzer called $ARGUMENTS:
+1. Read engine/resumeforge/analysis/CLAUDE.md
+2. Read base.py for the interface
+3. Create engine/resumeforge/analysis/$ARGUMENTS.py
+4. Add tests in engine/tests/test_analysis.py
 5. Register in analysis/__init__.py
+```
+
+### .claude/commands/lint-fix.md
+```markdown
+Run the full quality suite for all components:
+Engine: uv run ruff check . --fix && uv run ruff format . && uv run mypy resumeforge/
+CLI: go fmt ./... && go vet ./...
+Web: npm run check
+Report remaining issues that need manual attention.
 ```
 
 ---
 
 ## 4. Sub-Agents
 
-Sub-agents keep the main context clean by delegating focused tasks. Each agent has a specific role, skills, and output contract.
+### Agent: engine-data-architect
+**Purpose:** Build data layer — Pydantic models, JSON store, migrations
 
-### Agent: data-architect
-
-**Purpose:** Build and maintain the data layer (Pydantic models, JSON store, migrations)
-
-**Skills needed:**
-- Pydantic v2 (model_validator, field_validator, discriminated unions)
-- JSON schema design
-- Data migration patterns
-
-**Trigger:**
 ```
-Use a subagent to build the data layer:
-- Read DESIGN.md sections "Data model" and "Directory structure"
-- Create all Pydantic models in resumeforge/data/schema.py
-- Create resumeforge/data/store.py with CRUD operations
-- Create sample data files in data/
-- Write tests in tests/test_data.py
+Read DESIGN.md sections "Data Model" and "Repository Structure"
+- Create all Pydantic models in engine/resumeforge/data/schema.py
+- Create engine/resumeforge/data/store.py with CRUD operations
+- Create sample data files in engine/data/
+- Write tests in engine/tests/test_data.py
 - Run tests and fix until green
+Output: schema.py, store.py, sample JSON, passing tests
 ```
-
-**Output contract:** schema.py, store.py, sample JSON files, passing tests
 
 ---
 
-### Agent: export-engine
+### Agent: engine-api-builder
+**Purpose:** Build FastAPI REST API layer
 
-**Purpose:** Build the export pipeline (base class + MD/PDF/DOCX exporters)
-
-**Skills needed:**
-- python-docx (programmatic document building, NOT template-based)
-- WeasyPrint (HTML/CSS → PDF)
-- Jinja2 template rendering
-- ABC pattern in Python
-
-**Trigger:**
 ```
-Use a subagent to build the export engine:
-- Read DESIGN.md section "Export engine" and "Template system"
-- Create BaseExporter ABC in resumeforge/export/base.py
+Read DESIGN.md section "Engine API Contract"
+- Create engine/resumeforge/api/app.py (FastAPI app, CORS, OpenAPI)
+- Implement all routes from DESIGN.md: build, tailor, analyze, data, templates
+- SSE streaming for build and tailor endpoints
+- Write tests using FastAPI TestClient in engine/tests/test_api.py
+- Run tests and fix until green
+Output: app.py, all route files, passing API tests
+```
+
+---
+
+### Agent: engine-export
+**Purpose:** Build export pipeline
+
+```
+Read DESIGN.md sections "Export Engine" and "Template System"
+- Create BaseExporter ABC in engine/resumeforge/export/base.py
 - Implement MarkdownExporter, PdfExporter, DocxExporter
-- Create the "classic" template in resumeforge/templates/classic/
-- Write tests in tests/test_export.py using snapshot testing
+- Create the "classic" template in engine/resumeforge/templates/classic/
+- Write snapshot tests in engine/tests/test_export.py
 - Run tests and fix until green
+Output: base.py, 3 exporters, classic template, passing tests
 ```
-
-**Output contract:** base.py, 3 exporters, classic template, passing tests
 
 ---
 
-### Agent: ai-integrator
+### Agent: engine-ai
+**Purpose:** Build AI provider layer
 
-**Purpose:** Build the AI provider layer (LiteLLM wrapper, prompts, rewriter, tailor)
-
-**Skills needed:**
-- LiteLLM API (completion, model routing, error handling)
-- Jinja2 prompt templating
-- Structured output parsing from LLMs
-- Graceful degradation (AI-off fallback)
-
-**Trigger:**
 ```
-Use a subagent to build the AI integration:
-- Read DESIGN.md section "AI provider layer"
-- Create provider.py wrapping LiteLLM with config from meta.json
-- Create all prompt templates in resumeforge/ai/prompts/
+Read DESIGN.md section "AI Provider Layer"
+- Create engine/resumeforge/ai/provider.py wrapping LiteLLM
+- Create all prompt templates in engine/resumeforge/ai/prompts/
 - Implement rewriter.py, tailor.py, style.py
-- Ensure EVERY function works when ai.enabled=false (returns input unchanged)
-- Write tests with mocked LiteLLM responses
-- Run tests and fix until green
+- Ensure every function works with ai.enabled=false
+- Write tests with mocked LiteLLM in engine/tests/test_ai.py
+Output: provider.py, prompt templates, rewriter/tailor/style, passing tests
 ```
-
-**Output contract:** provider.py, prompt templates, rewriter/tailor/style modules, passing tests with mocks
 
 ---
 
-### Agent: analysis-suite
+### Agent: engine-analysis
+**Purpose:** Build all 5 analyzers and report generator
 
-**Purpose:** Build all 5 analyzers + report generator
-
-**Skills needed:**
-- Text analysis (keyword extraction, counting, regex)
-- NLP basics (tokenization for readability scoring)
-- Markdown report generation
-- Scoring/grading logic
-
-**Trigger:**
 ```
-Use a subagent to build the analysis engine:
-- Read DESIGN.md section "Analysis engine"
-- Create BaseAnalyzer ABC in resumeforge/analysis/base.py
+Read DESIGN.md section "Analysis Engine"
+- Create BaseAnalyzer ABC in engine/resumeforge/analysis/base.py
 - Implement: ats_score.py, gap_analysis.py, quantification.py, readability.py, grammar.py
 - Create report.py to aggregate all results
 - Write tests for each analyzer independently
-- Run tests and fix until green
+Output: base.py, 5 analyzers, report.py, passing tests
 ```
-
-**Output contract:** base.py, 5 analyzers, report.py, passing tests
 
 ---
 
 ### Agent: cli-builder
+**Purpose:** Build the Go CLI (Cobra commands + engine client)
 
-**Purpose:** Build the Typer CLI interface
-
-**Skills needed:**
-- Typer (commands, options, arguments, callbacks)
-- Rich (tables, panels, progress bars, markdown rendering)
-- Click testing (CliRunner)
-
-**Trigger:**
 ```
-Use a subagent to build the CLI:
-- Read DESIGN.md section "Interface specifications — CLI"
-- Create resumeforge/cli/app.py as the main entrypoint
-- Implement all commands: build, tailor, analyze, templates, data, config
-- Wire commands to core engine, export engine, and analysis engine
-- Write tests using Typer's CliRunner
-- Run tests and fix until green
+Read DESIGN.md sections "CLI" and "Engine API Contract"
+Read cli/CLAUDE.md for conventions
+- Set up Go module in cli/go.mod
+- Implement cli/client/client.go — typed HTTP client for all engine endpoints
+- Implement cli/client/engine.go — EnsureEngine() to auto-spawn Python engine
+- Create all Cobra commands in cli/cmd/ (build, tailor, analyze, data, templates, config)
+- Wire commands to client package
+- Write tests using Cobra's command testing helpers
+Output: go.mod, client package, cmd package, goreleaser.yml, passing tests
 ```
-
-**Output contract:** cli app.py, command modules, passing CLI tests
 
 ---
 
 ### Agent: tui-builder
+**Purpose:** Build the Go TUI (Bubble Tea screens)
 
-**Purpose:** Build the Textual TUI interface
-
-**Skills needed:**
-- Textual framework (screens, widgets, bindings, CSS)
-- Async Python (Textual is async-first)
-- Rich renderables inside Textual
-
-**Trigger:**
 ```
-Use a subagent to build the TUI:
-- Read DESIGN.md section "Interface specifications — TUI"
-- Create resumeforge/tui/app.py as the main TUI application
-- Implement screens: dashboard, editor (split-pane), analysis viewer
-- Wire to core engine for live preview
+Read DESIGN.md section "TUI"
+Read cli/CLAUDE.md for conventions
+- Create cli/tui/app.go as main Bubble Tea application
+- Implement screens: dashboard.go, editor.go, jobmatcher.go, analysis.go
+- Wire to cli/client/ for all engine data
+- SSE streaming for live ATS score updates
 - Manual testing instructions (no automated TUI tests for v1)
+Output: tui app.go, screen modules, manual test guide
 ```
-
-**Output contract:** tui app.py, screen modules, manual test instructions
 
 ---
 
 ### Agent: web-builder
+**Purpose:** Build the SvelteKit web frontend
 
-**Purpose:** Build the FastAPI + HTMX web interface
-
-**Skills needed:**
-- FastAPI (routes, templates, SSE streaming)
-- HTMX (partial updates, triggers, swap strategies)
-- Jinja2 HTML templates (for web UI, not resume templates)
-- Basic CSS (no framework needed, keep it simple)
-
-**Trigger:**
 ```
-Use a subagent to build the web UI:
-- Read DESIGN.md section "Interface specifications — Web UI"
-- Create resumeforge/web/app.py with FastAPI
-- Implement routes: builder, analysis, data viewer
-- Create HTMX-powered templates for live interaction
-- Wire to core engine for resume building and analysis
-- Write tests using FastAPI TestClient
-- Run tests and fix until green
+Read DESIGN.md sections "Web Frontend" and "Engine API Contract"
+Read web/CLAUDE.md for conventions
+- Set up SvelteKit project in web/ (npm create svelte@latest)
+- Create src/lib/api/engine.ts — typed fetch wrappers for all engine endpoints
+- Generate TypeScript types from engine OpenAPI spec
+- Implement all routes from DESIGN.md
+- Build components: ResumePreview, SectionEditor, ATSScore, TemplatePicker
+- SSE streaming for build progress and live ATS scoring
+- Write tests using Playwright or Vitest
+Output: full SvelteKit app, typed API client, components, passing tests
 ```
-
-**Output contract:** web app.py, routes, HTML templates, static CSS, passing tests
-
----
-
-### Agent: i18n-specialist
-
-**Purpose:** Add multi-language and RTL support
-
-**Skills needed:**
-- Babel (message extraction, .po files, locale formatting)
-- RTL CSS (direction, text-align, mirrored layouts)
-- Hebrew typography and date formatting
-
-**Trigger:**
-```
-Use a subagent to add i18n support:
-- Read DESIGN.md section "Multi-language support"
-- Create resumeforge/core/i18n.py with Babel integration
-- Create locale files for en and he
-- Add RTL detection and CSS support to HTML/PDF templates
-- Update all section headers to use translated strings
-- Add --lang flag to CLI build command
-- Write tests for both locales
-```
-
-**Output contract:** i18n.py, locale files, RTL-aware templates, passing tests
 
 ---
 
 ### Agent: qa-reviewer
-
 **Purpose:** Cross-cutting quality review after each phase
 
-**Skills needed:**
-- Python testing best practices
-- Security review (PII leaks, API key handling)
-- Code consistency checking
-
-**Trigger (after each phase):**
 ```
-Use a subagent to do a quality review:
-- Run full test suite: uv run pytest -x -v
-- Run linter: uv run ruff check .
-- Run type checker: uv run mypy resumeforge/
-- Check that data/profile.json is in .gitignore
-- Check that no API keys are hardcoded anywhere
-- Check that all AI functions have ai.enabled=false fallbacks
-- Report: passing/failing tests, lint issues, type errors, security concerns
-```
+Run full test suites:
+  Engine: uv run pytest -x -v
+  CLI: go test ./...
+  Web: npm run check && npm run test
 
-**Output contract:** QA report with pass/fail per category
+Run linters:
+  Engine: uv run ruff check . && uv run mypy resumeforge/
+  CLI: go vet ./...
+
+Security checks:
+  - engine/data/profile.json is in .gitignore
+  - No API keys hardcoded anywhere
+  - All AI functions have ai.enabled=false fallbacks
+  - Go CLI uses only client package for engine calls
+
+Report: passing/failing tests, lint issues, type errors, security concerns
+```
 
 ---
 
 ## 5. Recommended Build Order
 
 ```
-Phase 1 (Foundation):
-  1. data-architect     ← start here, everything depends on schemas
-  2. export-engine      ← can run in parallel once schemas exist
-  3. cli-builder        ← wire it together
-  4. qa-reviewer        ← validate phase 1
+Phase 1 — Engine Foundation:
+  1. engine-data-architect    ← schemas and store
+  2. engine-api-builder       ← REST API layer (depends on data)
+  3. engine-export            ← can run in parallel with API
+  4. qa-reviewer
 
-Phase 2 (Intelligence):
-  5. ai-integrator      ← adds AI capabilities
-  6. analysis-suite     ← can run in parallel with AI
-  7. qa-reviewer        ← validate phase 2
+Phase 2 — Go CLI:
+  5. cli-builder              ← Cobra + engine HTTP client
+  6. qa-reviewer
 
-Phase 3 (Templates + i18n):
-  8. i18n-specialist    ← adds language support
-  9. qa-reviewer        ← validate phase 3
+Phase 3 — AI + Analysis:
+  7. engine-ai                ← can run in parallel
+  8. engine-analysis          ← can run in parallel
+  9. qa-reviewer
 
-Phase 4 (Interfaces):
-  10. tui-builder       ← can run in parallel
-  11. web-builder       ← can run in parallel
-  12. qa-reviewer       ← final validation
+Phase 4 — Go TUI:
+  10. tui-builder
+  11. qa-reviewer
+
+Phase 5 — Web Frontend:
+  12. web-builder
+  13. qa-reviewer
+
+Phase 6 — Templates + i18n:
+  14. i18n + additional templates
+  15. qa-reviewer
 ```
 
-Agents 2+3 can run in parallel. Agents 5+6 can run in parallel. Agents 10+11 can run in parallel.
+Steps 7+8 can run in parallel. Steps 3+4 (from Phase 1) can run in parallel after data-architect completes.
 
 ---
 
 ## 6. Git Workflow
 
-```bash
-main                  ← stable, always passes tests
-├── phase-1/data      ← data-architect agent
-├── phase-1/export    ← export-engine agent (parallel)
-├── phase-1/cli       ← cli-builder (after data + export merge)
-├── phase-2/ai        ← ai-integrator
-├── phase-2/analysis  ← analysis-suite (parallel)
-├── phase-3/i18n      ← i18n-specialist
-├── phase-4/tui       ← tui-builder (parallel)
-└── phase-4/web       ← web-builder (parallel)
+```
+main                        ← stable, always passes all tests
+├── phase-1/engine-data     ← engine-data-architect agent
+├── phase-1/engine-api      ← engine-api-builder agent
+├── phase-1/engine-export   ← engine-export agent (parallel)
+├── phase-2/cli             ← cli-builder agent
+├── phase-3/engine-ai       ← engine-ai agent (parallel)
+├── phase-3/engine-analysis ← engine-analysis agent (parallel)
+├── phase-4/tui             ← tui-builder agent
+└── phase-5/web             ← web-builder agent
 ```
 
 Each agent works on its own branch. Merge to main after qa-reviewer passes.

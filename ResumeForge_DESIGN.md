@@ -1,168 +1,290 @@
-# ResumeForge — Design Document v1.0
+# ResumeForge — Design Document v2.0
 
-## Project overview
+## Project Overview
 
-**ResumeForge** is a personal, open-source CV automation platform that separates resume content from presentation, enabling rapid rebuilding and tailoring of resumes for specific roles. It features pluggable AI editing, multi-format export, multi-language support, and automated quality analysis.
+**ResumeForge** is an open-source resume automation platform that separates resume content from presentation, enabling rapid building, tailoring, and exporting of resumes for specific roles. It features pluggable AI editing, multi-format export, multi-language support, and automated quality analysis.
 
-**Scope:** Single-user, private repo, designed to be self-hosted and run locally.
+The platform is built as a **polyglot system** with clearly separated standalone clients and a central engine, forming the foundation for both a free community edition and a commercial cloud edition.
 
 ---
 
-## Tech stack decision
+## Business Model — Two Editions
 
-**Python** is the best fit for this project for several reasons:
+| | **Community (OSS)** | **Cloud (Commercial)** |
+|---|---|---|
+| **License** | MIT / Apache 2.0 | Proprietary SaaS |
+| **Core Engine** | Runs locally, self-hosted | Hosted and managed |
+| **Features** | Build · Edit · Export · Basic Analysis · Templates | Everything in OSS + Plugin Store |
+| **AI** | BYO API key (LiteLLM, any provider) | Managed AI with multi-provider support |
+| **Storage** | Local JSON files | Cloud DB (PostgreSQL) |
+| **Plugins** | Not supported | Plugin Store (see below) |
+| **Multi-user** | No — single user | Yes — auth, teams, data isolation |
+| **Clients** | CLI/TUI + Web Frontend (OSS) | Same OSS clients + cloud engine |
 
-- **CLI/TUI/Web all native:** Typer (CLI), Textual (TUI), and FastAPI (Web) share the same Python core — no cross-language bridges needed.
-- **AI ecosystem:** LiteLLM is Python-native. LangChain, LangGraph, and all major LLM SDKs are Python-first.
-- **Document generation:** python-docx, WeasyPrint (PDF), and Jinja2 templates are mature and battle-tested.
-- **Your skills:** Python is already on your CV as a primary language.
-- **Single dependency tree:** One `pyproject.toml`, one virtual environment, one test suite.
+### Cloud Plugin Store
 
-| Component | Library | Why |
-|-----------|---------|-----|
-| CLI | Typer + Rich | Type-safe CLI with beautiful output |
-| TUI | Textual | Terminal UI with mouse support, built on Rich |
-| Web UI | FastAPI + HTMX + Jinja2 | Lightweight, no JS framework needed |
-| AI Provider | LiteLLM | Unified API for OpenAI, Anthropic, Ollama, Azure, 100+ providers |
-| DOCX Export | python-docx | Full control over Word document generation |
-| PDF Export | WeasyPrint | CSS-based PDF from HTML templates |
-| Markdown | Jinja2 + markdown-it-py | Template-driven markdown rendering |
-| Data Store | JSON files | Git-friendly, human-readable, portable |
-| i18n | babel + custom | Locale-aware formatting + RTL support |
-| Testing | pytest + pytest-snapshot | Snapshot testing for generated documents |
-| Packaging | uv / pip | Modern Python package management |
+| Plugin | Description |
+|--------|-------------|
+| **DB Connector** | Connect to PostgreSQL, MongoDB, or custom stores |
+| **RAG Connector** | Retrieval-Augmented Generation — search past resumes/docs to improve AI output |
+| **ATS Repo** | Centralized ATS keyword database built from real job postings |
+| **AI Tailoring Plus** | Advanced multi-provider AI tailoring with A/B testing |
+| **LinkedIn Profile Enhancer** | Import/sync LinkedIn profile, AI-powered suggestions |
+| **Cover Letter Generator** | AI cover letters from the same content pipeline |
+| **Analytics Dashboard** | Track applications, response rates, tailoring history |
 
 ---
 
 ## Architecture
 
-### Layer overview
+### System Overview
 
 ```
-┌─────────────────────────────────────────────────┐
-│  Interfaces: CLI (Typer) · TUI (Textual) · Web  │
-├─────────────────────────────────────────────────┤
-│  Core Engine: Builder · Templates · Sections     │
-├────────────┬────────────────┬───────────────────┤
-│ Data Store │  AI Provider   │  Export Engine     │
-│ (JSON)     │  (LiteLLM)     │  (MD/PDF/DOCX)    │
-├────────────┴────────────────┴───────────────────┤
-│  Analysis Engine: ATS · Gaps · Quality · Grammar │
-├─────────────────────────────────────────────────┤
-│  Output: Tailored Resume + Report + Diff         │
-└─────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│                        STANDALONE CLIENTS                           │
+│                                                                     │
+│  ┌──────────────────────────┐   ┌──────────────────────────────┐   │
+│  │      CLI / TUI           │   │       Web Frontend           │   │
+│  │      Go                  │   │       SvelteKit              │   │
+│  │  Cobra + Bubble Tea      │   │  TypeScript + Svelte 5       │   │
+│  │  Lip Gloss + Bubbles     │   │  TailwindCSS                 │   │
+│  │  Single binary dist.     │   │  Vercel / Node deployment    │   │
+│  └────────────┬─────────────┘   └──────────────┬───────────────┘   │
+│               │                                │                    │
+│               └───────────────┬────────────────┘                    │
+│                               ▼                                     │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │              Engine API  (OpenAPI / REST + SSE)               │   │
+│  └──────────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────────┘
+                               │
+              ┌────────────────┼────────────────┐
+              ▼                ▼                ▼
+       ┌────────────┐  ┌────────────┐  ┌────────────────┐
+       │   LOCAL    │  │   CLOUD    │  │    HYBRID      │
+       │   ENGINE   │  │   ENGINE   │  │ Local engine + │
+       │  (Python)  │  │  (Python)  │  │ Cloud plugins  │
+       │  FastAPI   │  │  FastAPI   │  │                │
+       │  SQLite /  │  │ PostgreSQL │  │                │
+       │  JSON      │  │ + Plugins  │  │                │
+       └────────────┘  └────────────┘  └────────────────┘
 ```
 
-### Directory structure
+### Technology Stack
+
+| Component | Language | Key Libraries | Distribution |
+|-----------|----------|--------------|-------------|
+| **CLI / TUI** | Go | Cobra, Bubble Tea, Bubbles, Lip Gloss, Huh | Single binary (GoReleaser) |
+| **Web Frontend** | TypeScript | SvelteKit, Svelte 5, TailwindCSS | npm / Docker / Vercel |
+| **Core Engine** | Python | FastAPI, Pydantic v2, LiteLLM, Jinja2 | pip / uv / Docker |
+| **Export Engine** | Python | python-docx, WeasyPrint, markdown-it-py | Part of engine |
+| **Analysis Engine** | Python | Part of engine | Part of engine |
+
+#### Why Go for CLI/TUI?
+- **Single binary** — users run `resumeforge` with zero dependencies
+- **~5ms startup** vs ~300ms for Python — critical for CLI UX
+- **Cobra** is the standard for professional CLIs (Docker, kubectl, GitHub CLI, Hugo)
+- **Bubble Tea** (Elm architecture) + **Lip Gloss** = the most cohesive TUI toolkit available
+- **GoReleaser** trivialises cross-platform releases (Linux / macOS / Windows)
+
+#### Why SvelteKit for Web?
+- A resume builder requires **rich interactivity**: drag-and-drop, live preview, split-pane editor — HTMX cannot do this well
+- Svelte 5 compiles to **vanilla JS** — smallest bundles and fastest DOM updates of any major framework
+- **Scoped CSS** + TailwindCSS makes the premium commercial UI achievable
+- **Typescript-first** with Svelte 5 Runes provides strong type safety end-to-end
+- Cleanest separation from the Python engine — calls it via fetch/SSE
+
+#### Why Python for the Engine?
+- **AI ecosystem** — LiteLLM, LangChain, all major LLM SDKs are Python-first
+- **Document generation** — python-docx and WeasyPrint are mature and battle-tested
+- **Single dependency tree** — all engine logic in one package with one test suite
+- **FastAPI** auto-generates OpenAPI docs consumed by both Go and SvelteKit clients
+
+---
+
+## Repository Structure
 
 ```
-resumeforge/
-├── pyproject.toml
-├── README.md
-├── resumeforge/
-│   ├── __init__.py
-│   ├── cli/                    # CLI interface (Typer)
-│   │   ├── __init__.py
-│   │   ├── app.py              # Main CLI entrypoint
-│   │   └── commands/
-│   │       ├── build.py        # Build resume from data + template
-│   │       ├── tailor.py       # Tailor resume to job description
-│   │       ├── analyze.py      # Run analysis suite
-│   │       ├── template.py     # List/preview templates
-│   │       └── data.py         # Edit/view stored data
-│   ├── tui/                    # TUI interface (Textual)
-│   │   ├── __init__.py
-│   │   ├── app.py              # Main TUI application
+resumeforge/            ← Root (monorepo or separate repos per component)
+│
+├── engine/             ← Python: FastAPI core engine
+│   ├── pyproject.toml
+│   ├── resumeforge/
+│   │   ├── api/                ← REST API routes (OpenAPI)
+│   │   │   ├── routes/
+│   │   │   │   ├── build.py
+│   │   │   │   ├── tailor.py
+│   │   │   │   ├── analyze.py
+│   │   │   │   ├── data.py
+│   │   │   │   └── templates.py
+│   │   │   └── app.py          ← FastAPI application
+│   │   ├── core/               ← Resume builder engine
+│   │   │   ├── builder.py
+│   │   │   ├── section.py
+│   │   │   ├── template_engine.py
+│   │   │   └── i18n.py
+│   │   ├── data/               ← Data store layer
+│   │   │   ├── schema.py       ← Pydantic models
+│   │   │   ├── store.py
+│   │   │   └── migrations.py
+│   │   ├── ai/                 ← AI provider layer
+│   │   │   ├── provider.py     ← LiteLLM wrapper
+│   │   │   ├── rewriter.py
+│   │   │   ├── tailor.py
+│   │   │   ├── style.py
+│   │   │   └── prompts/        ← Jinja2 prompt templates
+│   │   │       ├── rewrite_section.j2
+│   │   │       ├── tailor_to_job.j2
+│   │   │       ├── translate.j2
+│   │   │       └── analyze.j2
+│   │   ├── export/             ← Export engine
+│   │   │   ├── base.py
+│   │   │   ├── markdown.py
+│   │   │   ├── pdf.py
+│   │   │   └── docx_export.py
+│   │   ├── analysis/           ← Analysis engine
+│   │   │   ├── base.py
+│   │   │   ├── ats_score.py
+│   │   │   ├── gap_analysis.py
+│   │   │   ├── quantification.py
+│   │   │   ├── readability.py
+│   │   │   ├── grammar.py
+│   │   │   └── report.py
+│   │   └── templates/          ← Resume output templates
+│   │       ├── classic/
+│   │       │   ├── template.toml
+│   │       │   ├── resume.md.j2
+│   │       │   ├── resume.html.j2
+│   │       │   └── resume.docx.py
+│   │       ├── modern/
+│   │       ├── minimal/
+│   │       └── executive/
+│   ├── data/                   ← User data (gitignored PII)
+│   │   ├── profile.json
+│   │   ├── experience.json
+│   │   ├── skills.json
+│   │   ├── education.json
+│   │   ├── projects.json
+│   │   ├── meta.json
+│   │   └── jobs/
+│   ├── output/                 ← Generated resumes
+│   └── tests/
+│
+├── cli/                ← Go: CLI + TUI standalone client
+│   ├── go.mod
+│   ├── go.sum
+│   ├── main.go
+│   ├── cmd/                    ← Cobra commands
+│   │   ├── root.go
+│   │   ├── build.go
+│   │   ├── tailor.go
+│   │   ├── analyze.go
+│   │   ├── data.go
+│   │   ├── templates.go
+│   │   └── config.go
+│   ├── tui/                    ← Bubble Tea TUI application
+│   │   ├── app.go
 │   │   └── screens/
-│   │       ├── dashboard.py    # Overview + quick actions
-│   │       ├── editor.py       # Section editor with preview
-│   │       └── analysis.py     # Analysis results viewer
-│   ├── web/                    # Web UI interface (FastAPI)
-│   │   ├── __init__.py
-│   │   ├── app.py              # FastAPI application
-│   │   ├── routes/
-│   │   │   ├── builder.py      # Resume builder routes
-│   │   │   ├── analysis.py     # Analysis routes
-│   │   │   └── api.py          # JSON API for HTMX
-│   │   ├── templates/          # Jinja2 HTML templates (web UI)
-│   │   │   ├── base.html
-│   │   │   ├── builder.html
-│   │   │   └── analysis.html
-│   │   └── static/
-│   │       └── styles.css
-│   ├── core/                   # Core engine (shared by all interfaces)
-│   │   ├── __init__.py
-│   │   ├── builder.py          # Resume assembly orchestrator
-│   │   ├── section.py          # Section model and management
-│   │   ├── template_engine.py  # Template loading and rendering
-│   │   └── i18n.py             # Internationalization engine
-│   ├── data/                   # Data store layer
-│   │   ├── __init__.py
-│   │   ├── store.py            # JSON read/write operations
-│   │   ├── schema.py           # Pydantic models for all data
-│   │   └── migrations.py       # Schema version upgrades
-│   ├── ai/                     # AI provider layer
-│   │   ├── __init__.py
-│   │   ├── provider.py         # LiteLLM wrapper + config
-│   │   ├── prompts/            # Prompt templates (Jinja2)
-│   │   │   ├── rewrite_section.j2
-│   │   │   ├── tailor_to_job.j2
-│   │   │   ├── translate.j2
-│   │   │   └── analyze.j2
-│   │   ├── rewriter.py         # Section rewriting logic
-│   │   ├── tailor.py           # Job description matching
-│   │   └── style.py            # Tone/style controller
-│   ├── export/                 # Export engine
-│   │   ├── __init__.py
-│   │   ├── markdown.py         # Markdown export
-│   │   ├── pdf.py              # PDF via WeasyPrint
-│   │   ├── docx_export.py      # DOCX via python-docx
-│   │   └── base.py             # Abstract exporter interface
-│   ├── analysis/               # Analysis engine
-│   │   ├── __init__.py
-│   │   ├── ats_score.py        # ATS keyword matching
-│   │   ├── gap_analysis.py     # Missing skills detector
-│   │   ├── quantification.py   # Metrics/numbers in bullets
-│   │   ├── readability.py      # Length, formatting, structure
-│   │   ├── grammar.py          # Language quality (AI-assisted)
-│   │   └── report.py           # Report generator
-│   └── templates/              # Resume templates (output)
-│       ├── classic/
-│       │   ├── template.toml   # Template metadata
-│       │   ├── resume.md.j2    # Markdown template
-│       │   ├── resume.html.j2  # HTML template (for PDF)
-│       │   └── resume.docx.py  # python-docx builder
-│       ├── modern/
-│       ├── minimal/
-│       └── executive/
-├── data/                       # User data (gitignored PII)
-│   ├── profile.json            # Name, contact, links (PII)
-│   ├── experience.json         # Work history
-│   ├── skills.json             # Skills and competencies
-│   ├── education.json          # Education and certifications
-│   ├── projects.json           # Side projects, open source
-│   ├── meta.json               # Preferences, default locale, template
-│   └── jobs/                   # Saved job descriptions
-│       ├── bank-appsec.json
-│       └── startup-devsecops.json
-├── output/                     # Generated resumes
-│   └── 2026-03-15_bank-appsec/
-│       ├── resume.md
-│       ├── resume.pdf
-│       ├── resume.docx
-│       └── analysis_report.md
-└── tests/
-    ├── test_builder.py
-    ├── test_analysis.py
-    ├── test_export.py
-    └── snapshots/
+│   │       ├── dashboard.go
+│   │       ├── editor.go
+│   │       ├── jobmatcher.go
+│   │       └── analysis.go
+│   ├── client/                 ← HTTP client for engine API
+│   │   ├── client.go
+│   │   └── models.go           ← Go structs mirroring engine API
+│   └── .goreleaser.yml
+│
+├── web/                ← SvelteKit: Web frontend standalone client
+│   ├── package.json
+│   ├── svelte.config.js
+│   ├── vite.config.ts
+│   ├── src/
+│   │   ├── app.html
+│   │   ├── routes/             ← SvelteKit file-based routing
+│   │   │   ├── +layout.svelte
+│   │   │   ├── +page.svelte    ← Dashboard
+│   │   │   ├── builder/
+│   │   │   ├── analyze/
+│   │   │   ├── data/
+│   │   │   └── templates/
+│   │   ├── lib/
+│   │   │   ├── components/     ← Reusable Svelte components
+│   │   │   │   ├── ResumePreview.svelte
+│   │   │   │   ├── SectionEditor.svelte
+│   │   │   │   ├── ATSScore.svelte
+│   │   │   │   └── TemplatePicker.svelte
+│   │   │   └── api/            ← Engine API client (typed fetch)
+│   │   │       ├── engine.ts
+│   │   │       └── types.ts    ← TypeScript types from OpenAPI
+│   │   └── app.css
+│   └── static/
+│
+└── docs/               ← Shared documentation
+    ├── api/            ← Engine API spec (OpenAPI JSON)
+    └── architecture/
 ```
 
 ---
 
-## Data model
+## Engine API Contract
 
-All data is stored as JSON files in the `data/` directory. Each file maps to a Pydantic model for validation.
+The engine exposes a REST API consumed by both the Go CLI and the SvelteKit web frontend. FastAPI auto-generates the OpenAPI spec, from which Go structs and TypeScript types are generated.
+
+### Core Endpoints
+
+```
+# Resume building
+POST   /api/build                 → Build resume from data + template
+GET    /api/build/stream          → SSE stream of build progress
+
+# AI tailoring
+POST   /api/tailor                → Tailor resume to job description
+GET    /api/tailor/stream         → SSE stream of tailoring progress
+
+# Analysis
+POST   /api/analyze               → Run analysis suite
+GET    /api/analyze/{job_slug}    → Get cached analysis
+
+# Data management
+GET    /api/data/{section}        → Get section data
+PUT    /api/data/{section}        → Update section data
+POST   /api/data/import           → Import backup
+GET    /api/data/export           → Export backup as zip
+
+# Templates
+GET    /api/templates             → List available templates
+GET    /api/templates/{name}/preview → Preview template (PDF bytes)
+
+# Jobs
+GET    /api/jobs                  → List saved job descriptions
+POST   /api/jobs                  → Save new job description
+GET    /api/jobs/{slug}           → Get job description
+DELETE /api/jobs/{slug}           → Delete job description
+
+# Config
+GET    /api/config                → Get current config
+PATCH  /api/config                → Update config fields
+```
+
+### Engine Startup Modes
+
+```
+# Run engine as a server (web frontend or remote CLI use)
+resumeforge-engine --port 8080
+
+# CLI launches engine as a local subprocess (transparent to user)
+resumeforge build --template classic --format pdf
+# ↑ Go CLI starts engine if not running, calls API, shuts down on exit
+
+# Cloud mode: CLI connects to hosted engine
+resumeforge --engine https://cloud.resumeforge.io build ...
+```
+
+---
+
+## Data Model
+
+All data is stored as JSON files in `engine/data/`. Each file maps to a Pydantic model.
 
 ### profile.json (PII — gitignored)
 
@@ -232,23 +354,6 @@ All data is stored as JSON files in the `data/` directory. Each file maps to a P
 }
 ```
 
-### education.json
-
-```json
-{
-  "schema_version": "1.0",
-  "entries": [
-    {
-      "institution": "Ben-Zvi High School, Kiryat-Ono",
-      "degree": "Computer Science & Chemistry",
-      "start_date": null,
-      "end_date": null
-    }
-  ],
-  "certifications": []
-}
-```
-
 ### meta.json
 
 ```json
@@ -257,6 +362,11 @@ All data is stored as JSON files in the `data/` directory. Each file maps to a P
   "default_locale": "en",
   "default_template": "classic",
   "default_format": "pdf",
+  "engine": {
+    "mode": "local",
+    "url": null,
+    "port": 8080
+  },
   "ai": {
     "provider": "openai",
     "model": "gpt-4o",
@@ -291,9 +401,9 @@ All data is stored as JSON files in the `data/` directory. Each file maps to a P
 
 ---
 
-## Template system
+## Template System
 
-Each template is a self-contained directory with metadata and format-specific renderers.
+Each template is a self-contained directory in `engine/resumeforge/templates/`. Templates are engine-side only — both clients receive rendered output.
 
 ### template.toml
 
@@ -321,22 +431,18 @@ color_text = "#333333"
 order = ["header", "summary", "competencies", "exploring", "experience", "education"]
 ```
 
-### Template rendering flow
+### Template Rendering Flow
 
 ```
-data/*.json ──→ Pydantic Models ──→ Template Context ──→ Jinja2 ──→ Format-specific renderer
-                                         ↑                              │
-                                    i18n strings                   ┌────┴────┐
-                                                                   MD  PDF  DOCX
+data/*.json ──→ Pydantic Models ──→ ResumeContext ──→ Jinja2 ──→ Format renderer
+                                         ↑                          │
+                                    i18n strings               ┌────┴────┐
+                                                              MD   PDF  DOCX
 ```
-
-Templates use Jinja2 for markdown and HTML (PDF). DOCX templates use a Python builder class inheriting from `BaseDocxTemplate` that receives the same context dict.
 
 ---
 
-## AI provider layer
-
-### Architecture
+## AI Provider Layer (Engine)
 
 ```
 User Request ──→ AI Router (LiteLLM) ──→ Any OpenAI-compatible API
@@ -350,18 +456,27 @@ User Request ──→ AI Router (LiteLLM) ──→ Any OpenAI-compatible API
                  └─────────────────────────┘
 ```
 
-### LiteLLM configuration
+### AI Capabilities
 
-LiteLLM supports 100+ providers through a single `completion()` call. Configuration in `meta.json`:
+| Capability | Prompt | Description |
+|-----------|--------|-------------|
+| Rewrite section | `rewrite_section.j2` | Rewrite with tone/style control |
+| Tailor to job | `tailor_to_job.j2` | Adapt resume to job description |
+| Translate | `translate.j2` | Translate content to target locale |
+| Analyze | `analyze.j2` | AI-assisted grammar and quality check |
+| Suggest bullets | `suggest_bullets.j2` | Generate bullets from raw experience |
+| Gap fill | `gap_fill.j2` | Suggest how to address skill gaps |
+
+AI is **always optional** — every function must work with `ai.enabled: false`.
+
+Supported providers via LiteLLM:
 
 ```python
-import litellm
-
 # OpenAI
 litellm.completion(model="gpt-4o", messages=[...])
 
 # Anthropic
-litellm.completion(model="claude-sonnet-4-20250514", messages=[...])
+litellm.completion(model="claude-opus-4-20250514", messages=[...])
 
 # Local Ollama
 litellm.completion(model="ollama/llama3", messages=[...], api_base="http://localhost:11434")
@@ -370,36 +485,9 @@ litellm.completion(model="ollama/llama3", messages=[...], api_base="http://local
 litellm.completion(model="azure/gpt-4o", messages=[...], api_base="https://my-endpoint.openai.azure.com")
 ```
 
-### AI capabilities
-
-| Capability | Prompt template | Description |
-|-----------|----------------|-------------|
-| Rewrite section | `rewrite_section.j2` | Rewrite a section with style/tone control |
-| Tailor to job | `tailor_to_job.j2` | Adapt entire resume to match job description |
-| Translate | `translate.j2` | Translate resume content to target locale |
-| Analyze | `analyze.j2` | AI-assisted grammar and quality check |
-| Suggest bullets | `suggest_bullets.j2` | Generate bullet points from raw experience |
-| Gap fill | `gap_fill.j2` | Suggest how to address skill gaps for a role |
-
-### Style controller
-
-The AI style controller governs tone and formatting rules passed to every prompt:
-
-```python
-class StyleController:
-    tone: str           # "professional", "technical", "executive", "casual"
-    max_bullet_words: int
-    action_verb_first: bool
-    avoid_tool_names: bool
-    quantify_preference: str  # "aggressive", "moderate", "minimal"
-    language: str       # Target language code
-```
-
 ---
 
-## Export engine
-
-### Exporter interface
+## Export Engine (Engine)
 
 ```python
 from abc import ABC, abstractmethod
@@ -414,209 +502,198 @@ class PdfExporter(BaseExporter): ...      # WeasyPrint: HTML → PDF
 class DocxExporter(BaseExporter): ...     # python-docx programmatic builder
 ```
 
-### Export flow
+### Export Flow
 
 ```
-resumeforge build --template classic --format pdf --job bank-appsec
+POST /api/build
 
 1. Load data/*.json → Pydantic models
-2. Load job description (if --job provided)
+2. Load job description (if job_slug provided)
 3. [Optional] AI tailor sections to job
 4. Build ResumeContext (merged, prioritized sections)
 5. Apply i18n (locale-specific labels, date formatting, RTL)
 6. Render through template + exporter
 7. Save to output/{date}_{job-slug}/
 8. Run analysis suite → save report
+9. Return output file paths + analysis summary
 ```
 
 ---
 
-## Analysis engine
-
-The analysis engine runs multiple analyzers and produces a unified report.
-
-### Analyzers
+## Analysis Engine (Engine)
 
 | Analyzer | What it measures | Scoring |
 |---------|-----------------|---------|
-| **ATS keyword match** | Keywords from job description found in resume | % match, missing keywords list |
-| **Gap analysis** | Required skills in JD not present in resume | Critical/nice-to-have gaps |
-| **Quantification** | % of bullets containing metrics/numbers | Score + flagged weak bullets |
-| **Readability** | Page count, bullet length, section balance | Pass/warn/fail per metric |
+| **ATS keyword match** | Keywords from JD found in resume | % match, missing keywords |
+| **Gap analysis** | Required skills in JD not in resume | Critical / nice-to-have gaps |
+| **Quantification** | % of bullets containing metrics | Score + flagged weak bullets |
+| **Readability** | Page count, bullet length, section balance | Pass / warn / fail per metric |
 | **Grammar & quality** | Spelling, grammar, consistency (AI-assisted) | Issues list with severity |
 
-### Report output
-
-```markdown
-# Resume Analysis Report
-## Generated: 2026-03-15 | Target: Senior AppSec Guide — Major Bank
-
-### ATS Keyword Match: 78/100
-**Matched:** Application Security, SAST/DAST, Kubernetes, Azure, GCP, CI/CD...
-**Missing:** Checkmarx (add to competencies), OWASP Top 10 (add to summary)
-
-### Skill Gap Analysis
-**Critical gaps:** None
-**Nice-to-have gaps:** CS Degree (cannot address), Penetration Testing cert
-
-### Quantification Score: 65/100
-**Strong:** "40% reduction in incidents", "100+ reviews", "200% productivity"
-**Weak (no metrics):** 3 bullets in current role — consider adding client count or project scope
-
-### Readability: Pass
-- Pages: 1 (target: 1) ✓
-- Avg bullet length: 18 words ✓
-- Longest bullet: 24 words ✓
-- Section balance: Good ✓
-
-### Grammar & Quality: 2 issues
-- "Provide cloud security consulting" → Consider past tense for non-current roles
-- Inconsistent date format: "2018 – 2022" vs "Nov 2022 – Feb 2025"
-```
-
 ---
 
-## Multi-language support
+## Client Specifications
 
-### Approach
-
-- **Content translation:** AI-powered via `translate.j2` prompt template
-- **UI labels:** Babel message catalogs (`.po` files) for section headers, report labels
-- **Date formatting:** Locale-aware via Babel (`March 2025` vs `מרץ 2025`)
-- **RTL support:** HTML/PDF templates detect RTL locales and apply `dir="rtl"` + appropriate CSS
-- **Per-section language:** Each section can specify its own language override
-
-### Locale structure
-
-```
-resumeforge/
-  locales/
-    en/
-      LC_MESSAGES/
-        messages.po    # "Professional Summary", "Core Competencies", ...
-    he/
-      LC_MESSAGES/
-        messages.po    # "תקציר מקצועי", "יכולות ליבה", ...
-```
-
----
-
-## Interface specifications
-
-### CLI (Typer)
+### CLI (Go — Cobra)
 
 ```bash
-# Build resume
+# Build
 resumeforge build --template classic --format pdf
 resumeforge build --template modern --format docx --job bank-appsec --lang he
 
-# Tailor to job
+# Tailor
 resumeforge tailor --job bank-appsec --ai
-resumeforge tailor --job-file ./description.txt --ai --model claude-sonnet-4-20250514
+resumeforge tailor --job-file ./description.txt --ai --model claude-opus-4-20250514
 
 # Analyze
 resumeforge analyze --job bank-appsec
-resumeforge analyze --format json  # Machine-readable report
+resumeforge analyze --format json
 
 # Templates
 resumeforge templates list
 resumeforge templates preview classic --format pdf
 
-# Data management
+# Data
 resumeforge data show experience
 resumeforge data edit experience --section scorp-2025
 resumeforge data export --output backup.zip
 resumeforge data import --input backup.zip
 
-# Configuration
+# Config
 resumeforge config set ai.model gpt-4o
 resumeforge config set ai.enabled true
-resumeforge config set style.tone executive
+resumeforge config set engine.url https://cloud.resumeforge.io
+
+# Launch TUI
+resumeforge tui
 ```
 
-### TUI (Textual)
+#### CLI → Engine Communication
+
+```
+resumeforge build ...
+  ├── Check if local engine is running on meta.engine.port
+  ├── If not → spawn engine process (python -m resumeforge.api.app)
+  ├── Call POST /api/build
+  ├── Stream SSE progress to terminal (Rich progress bar)
+  └── Print output path on completion
+```
+
+### TUI (Go — Bubble Tea)
 
 ```bash
 resumeforge tui
 ```
 
-Screens:
-- **Dashboard:** Overview of stored data, recent builds, quick actions
-- **Editor:** Split-pane section editor with live preview (markdown rendered in right pane)
-- **Job matcher:** Paste job description, see ATS score update live
-- **Analysis:** Full analysis report with expandable sections
-- **Templates:** Visual template browser with sample renders
+Screens (Bubble Tea):
 
-### Web UI (FastAPI + HTMX)
+- **Dashboard** — data overview, recent builds, quick actions
+- **Editor** — split-pane section editor with live Markdown preview (rendered via Glow)
+- **Job Matcher** — paste JD, watch ATS score update live via SSE
+- **Analysis** — full report with expandable sections
+- **Templates** — visual template browser with sample renders
 
-```bash
-resumeforge web --port 8080
-```
+### Web Frontend (SvelteKit)
+
+Defaults to running at `http://localhost:5173` (dev) / port 3000 (prod).
 
 Routes:
-- `GET /` — Dashboard
-- `GET /build` — Resume builder (template picker, format selector, job selector)
-- `POST /build` — Generate resume, stream progress via SSE
-- `GET /analyze` — Analysis view
-- `POST /analyze` — Run analysis, return HTMX partial
-- `GET /data/{section}` — View/edit section data
-- `GET /api/templates` — List templates (JSON)
-- `GET /api/preview/{template}` — Preview template (returns PDF bytes)
+
+```
+/                    ← Dashboard: recent builds, quick actions
+/builder             ← Resume builder: template picker, format, job selector
+/builder/preview     ← Live preview pane (PDF iframe / Markdown render)
+/analyze             ← Analysis view with charts and recommendations
+/data/[section]      ← View and edit section data (form-based)
+/templates           ← Template gallery with preview
+/jobs                ← Saved job descriptions
+/settings            ← Config: AI, engine URL, style preferences
+```
+
+The SvelteKit frontend communicates with the engine API via typed fetch functions in `src/lib/api/engine.ts`.
 
 ---
 
-## Build phases
+## Multi-Language Support
 
-### Phase 1 — Foundation (MVP)
+- **Content translation:** AI-powered via `translate.j2` prompt template
+- **UI labels:** Babel message catalogs (`.po` files) — section headers, report labels
+- **Date formatting:** Locale-aware via Babel (`March 2025` vs `מרץ 2025`)
+- **RTL support:** HTML/PDF templates detect RTL locales and apply `dir="rtl"` + CSS
+- **Per-section language:** Each section can override the global locale
+
+```
+engine/resumeforge/locales/
+  en/LC_MESSAGES/messages.po   ← "Professional Summary", "Core Competencies"
+  he/LC_MESSAGES/messages.po   ← "תקציר מקצועי", "יכולות ליבה"
+```
+
+---
+
+## Build Phases
+
+### Phase 1 — Engine Foundation (MVP)
 - Data store (JSON + Pydantic models)
 - Core builder engine
 - 1 template ("classic")
 - Markdown + DOCX export
-- CLI interface (build + data commands)
+- Engine REST API (FastAPI, core endpoints)
 - Basic ATS keyword analysis
 
-### Phase 2 — AI + Analysis
+### Phase 2 — Go CLI Client
+- Cobra CLI with all commands
+- Engine auto-spawn on first command
+- Goreleaser multi-platform release
+- Basic Rich progress output
+
+### Phase 3 — AI + Full Analysis
 - LiteLLM integration
 - AI rewriting and tailoring
-- Full analysis suite (all 5 analyzers)
+- Full analysis suite (5 analyzers)
 - Report generator
 - PDF export (WeasyPrint)
 
-### Phase 3 — Templates + i18n
+### Phase 4 — Go TUI
+- Bubble Tea TUI screens (Dashboard, Editor, Job Matcher, Analysis)
+- Live preview via Glow
+- SSE streaming from engine
+
+### Phase 5 — SvelteKit Web Frontend
+- SvelteKit project setup
+- All pages and components
+- Resume preview component
+- Typed API client from OpenAPI spec
+- Live ATS scoring via SSE
+
+### Phase 6 — Templates + i18n
 - 3 additional templates (modern, minimal, executive)
 - Multi-language support (en, he)
-- RTL support for Hebrew
-- Template preview system
+- RTL support
 
-### Phase 4 — TUI + Web
-- TUI interface (Textual)
-- Web UI (FastAPI + HTMX)
-- Live preview
-- Job description manager
-
-### Phase 5 — Polish
-- Diff view (before/after AI edits)
-- Snapshot testing
-- CI pipeline
-- Documentation + README
-- Plugin system for custom analyzers
+### Phase 7 — Cloud Edition Foundation
+- Auth (JWT)
+- PostgreSQL backend
+- Plugin system interface
+- First plugins: DB Connector, RAG Connector
 
 ---
 
-## Security considerations
+## Security Considerations
 
-- **PII isolation:** `profile.json` is in `.gitignore` by default. A `.gitignore` template is generated on `resumeforge init`.
-- **AI data:** When AI is enabled, resume content is sent to the configured provider. Local providers (Ollama) keep data on-machine. A warning is displayed on first use of cloud providers.
-- **No telemetry:** Zero analytics, tracking, or phone-home behavior.
-- **API keys:** Stored in environment variables or a local `.env` file (also gitignored), never in JSON data files.
+- **PII isolation:** `engine/data/profile.json` is in `.gitignore`. Generated on `resumeforge init`.
+- **AI data:** Resume content is sent to the configured AI provider when enabled. Local providers (Ollama) keep data on-machine. Warning shown on first cloud provider use.
+- **No telemetry:** Zero analytics, tracking, or phone-home in the OSS edition.
+- **API keys:** Stored in environment variables or `.env` (gitignored), never in JSON data files.
+- **Engine API auth:** Local engine is localhost-only (no auth needed). Cloud engine uses JWT + API keys.
+- **Language boundary:** Go CLI → Python engine is always over HTTP. No direct memory access between components.
 
 ---
 
-## Future considerations (post-v1)
+## Future Considerations (Post-v1 / Cloud Edition)
 
-- **Multi-user mode:** SQLite/PostgreSQL backend, auth, per-user data isolation
-- **SaaS deployment:** Docker compose, hosted web UI, Stripe billing
+- **Plugin marketplace:** Community-contributed plugins with review process
 - **GitHub integration:** Auto-build on push, resume versioning via git tags
-- **LinkedIn import:** Parse LinkedIn profile export to seed data files
-- **Cover letter generator:** Same AI pipeline, different templates
-- **Portfolio mode:** Generate a personal website from the same data
+- **LinkedIn import:** Parse LinkedIn profile export to seed data
+- **Portfolio mode:** Generate personal website from the same data pipeline
+- **Team features:** Shared templates, reviewer workflows
+- **Analytics:** Application tracking, response rate monitoring
