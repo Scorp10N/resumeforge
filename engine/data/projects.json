@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0",
+  "projects": [
+    {
+      "id": "proj-1",
+      "name": "ResumeForge",
+      "description": "Open-source resume automation platform with AI tailoring and multi-format export.",
+      "url": "https://github.com/resumeforge/resumeforge",
+      "start_date": "2026-01",
+      "end_date": null,
+      "is_current": true,
+      "tags": ["python", "go", "svelte", "ai"],
+      "bullets": [
+        {
+          "id": "proj-1-1",
+          "text": "Built a polyglot platform with Python engine, Go CLI/TUI, and SvelteKit web frontend.",
+          "tags": ["architecture"],
+          "metrics": false
+        }
+      ],
+      "priority": 1
+    }
+  ]
+}

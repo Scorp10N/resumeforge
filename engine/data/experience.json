@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0",
+  "positions": [
+    {
+      "id": "scorp-2025",
+      "company": "Scorp Solutions",
+      "title": "Security Consultant (Freelance)",
+      "start_date": "2025-03",
+      "end_date": null,
+      "is_current": true,
+      "location": "Israel",
+      "bullets": [
+        {
+          "id": "scorp-2025-1",
+          "text": "Provide cloud security consulting, security architecture reviews, and penetration testing for diverse clients.",
+          "tags": ["cloud-security", "pentest", "architecture"],
+          "metrics": false
+        }
+      ],
+      "tags": ["freelance", "consulting", "cloud", "appsec"],
+      "priority": 1
+    }
+  ]
+}

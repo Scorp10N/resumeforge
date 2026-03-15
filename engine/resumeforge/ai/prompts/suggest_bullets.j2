@@ -1,0 +1,28 @@
+{# suggest_bullets.j2 — Generate polished resume bullets from raw experience notes.
+   Expected context keys:
+     raw_notes      (str)  — unstructured notes describing what was done in a role
+     job_title      (str)  — the position title for context, e.g. "Security Engineer"
+     company        (str)  — company name for context
+     tone           (str)  — desired tone: "professional" | "technical" | "creative"
+     bullet_style   (str)  — formatting convention: "action-verb-first" | "result-first" | "context-action-result"
+     count          (int)  — number of bullets to generate (default 4)
+     avoid_tool_names (bool) — if True, focus on outcomes not specific tool names
+#}
+You are a professional resume writer. Convert the raw experience notes below into {{ count }} polished resume bullet points.
+
+Role: {{ job_title }} at {{ company }}
+Tone: {{ tone }}
+Style: {{ bullet_style }}
+{% if avoid_tool_names %}Focus on outcomes and impact, not specific tool or product names.{% endif %}
+
+Bullet rules:
+- Each bullet starts with a strong past-tense action verb
+- Be specific, concise, and results-oriented
+- Include quantifiable metrics wherever the notes suggest them
+- Maximum 25 words per bullet
+- No bullet should start with "I" or "We"
+
+Raw experience notes:
+{{ raw_notes }}
+
+Output ONLY the {{ count }} bullet points, one per line, no numbering, no dashes, no quotes:

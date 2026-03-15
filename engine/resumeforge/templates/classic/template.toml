@@ -1,0 +1,21 @@
+[template]
+name = "Classic"
+description = "Clean single-column layout, ATS-optimized"
+author = "ResumeForge"
+version = "1.0"
+supported_formats = ["md", "docx", "pdf"]
+max_pages = 2
+ats_friendly = true
+
+[style]
+font_family = "Calibri"
+font_size_body = 10
+font_size_heading = 12
+margin_top = 0.5
+margin_sides = 0.75
+color_primary = "#1F4E79"
+color_accent = "#2E75B6"
+color_text = "#333333"
+
+[sections]
+order = ["header", "summary", "competencies", "exploring", "experience", "education", "projects", "certifications"]

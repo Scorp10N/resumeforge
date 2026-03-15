@@ -1,0 +1,22 @@
+You are an expert resume writer. Write a tailored professional summary for a resume targeting the role below.
+
+Candidate profile:
+- Name: {{ profile.name }}
+- Current title: {{ profile.title }}
+- Skills: {{ skills.categories | map(attribute='items') | sum(start=[]) | join(', ') }}
+
+Target role:
+- Title: {{ job_title }}
+- Company: {{ job_company }}
+- Key requirements: {{ requirements | join(', ') }}
+
+Job description excerpt:
+{{ job_description[:800] }}
+
+Write a 2-3 sentence professional summary that:
+1. Opens with job title and years of experience
+2. Highlights the most relevant skills for this role
+3. Conveys specific value to this company
+4. Uses {{ profile.languages[0] | default('en') }} language
+
+Output ONLY the summary text, no label, no quotes:
