@@ -170,7 +170,7 @@ func (m DashboardModel) View() string {
 			if t.ATSFriendly {
 				ats = " [ATS]"
 			}
-			line := fmt.Sprintf("%-15s %s%s  (%s)", t.Name, t.Description, ats, strings.Join(t.Formats, ", "))
+			line := fmt.Sprintf("%-15s %s%s  (%s)", t.Name, t.Description, ats, strings.Join(t.SupportedFormats, ", "))
 			b.WriteString(bodyStyle.Render(line))
 			b.WriteString("\n")
 		}

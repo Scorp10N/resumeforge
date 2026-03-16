@@ -3,7 +3,6 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"sort"
 
 	"github.com/resumeforge/resumeforge/client"
 	"github.com/spf13/cobra"
@@ -36,7 +35,7 @@ func runAnalyze(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	var resp *client.AnalyzeResponse
+	var resp *client.AnalysisReport
 
 	if analyzeJob != "" {
 		// Try cached analysis first.
@@ -58,25 +57,18 @@ func runAnalyze(cmd *cobra.Command, args []string) error {
 	return printAnalysis(resp, analyzeFormat)
 }
 
-func printAnalysis(resp *client.AnalyzeResponse, format string) error {
+func printAnalysis(resp *client.AnalysisReport, format string) error {
 	switch format {
 	case "json":
 		enc := json.NewEncoder(rootCmd.OutOrStdout())
 		enc.SetIndent("", "  ")
 		return enc.Encode(resp)
 	default:
-		fmt.Fprintln(rootCmd.OutOrStdout(), resp.Report)
-		if len(resp.Scores) > 0 {
-			fmt.Fprintln(rootCmd.OutOrStdout(), "\nScores:")
-			// Sort keys for deterministic output.
-			keys := make([]string, 0, len(resp.Scores))
-			for k := range resp.Scores {
-				keys = append(keys, k)
-			}
-			sort.Strings(keys)
-			for _, k := range keys {
-				fmt.Fprintf(rootCmd.OutOrStdout(), "  %-25s %.1f%%\n", k+":", resp.Scores[k]*100)
-			}
+		fmt.Fprintf(rootCmd.OutOrStdout(), "Overall: %s\n", resp.OverallLabel)
+		fmt.Fprintf(rootCmd.OutOrStdout(), "Findings: %d total, %d critical\n\n",
+			resp.TotalFindings, resp.CriticalFindings)
+		for _, result := range resp.Results {
+			fmt.Fprintf(rootCmd.OutOrStdout(), "  %-25s %s\n", result.Analyzer+":", result.Label)
 		}
 		return nil
 	}

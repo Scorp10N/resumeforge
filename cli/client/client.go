@@ -45,33 +45,29 @@ func (c *Client) Health() error {
 	return nil
 }
 
-// Build calls POST /api/build and returns the build response.
+// Build calls POST /api/build with query parameters and returns the build response.
+// The engine's build endpoint uses Query params, not a JSON body.
 func (c *Client) Build(req BuildRequest) (*BuildResponse, error) {
 	var resp BuildResponse
-	if err := c.postJSON("/api/build", req, &resp); err != nil {
+	if err := c.postQuery("/api/build", buildQueryParams(req), &resp); err != nil {
 		return nil, err
 	}
 	return &resp, nil
 }
 
-// StreamBuild calls GET /api/build/stream and returns a channel of SSE events.
+// StreamBuild calls GET /api/build/stream with query parameters and returns a channel of SSE events.
 // The channel is closed when the stream ends or an error occurs.
 func (c *Client) StreamBuild(req BuildRequest) (<-chan SSEEvent, error) {
-	body, err := json.Marshal(req)
-	if err != nil {
-		return nil, fmt.Errorf("marshal build request: %w", err)
-	}
-	httpReq, err := http.NewRequest(http.MethodGet, c.BaseURL+"/api/build/stream", bytes.NewReader(body))
+	url := c.BaseURL + "/api/build/stream?" + buildQueryParams(req).Encode()
+	httpReq, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("create stream request: %w", err)
 	}
-	httpReq.Header.Set("Content-Type", "application/json")
 	httpReq.Header.Set("Accept", "text/event-stream")
-
 	return c.streamSSE(httpReq)
 }
 
-// Tailor calls POST /api/tailor and returns the tailor response.
+// Tailor calls POST /api/tailor with a JSON body and returns the tailor response.
 func (c *Client) Tailor(req TailorRequest) (*TailorResponse, error) {
 	var resp TailorResponse
 	if err := c.postJSON("/api/tailor", req, &resp); err != nil {
@@ -80,34 +76,34 @@ func (c *Client) Tailor(req TailorRequest) (*TailorResponse, error) {
 	return &resp, nil
 }
 
-// StreamTailor calls GET /api/tailor/stream and returns a channel of SSE events.
+// StreamTailor calls GET /api/tailor/stream with query parameters and returns a channel of SSE events.
 func (c *Client) StreamTailor(req TailorRequest) (<-chan SSEEvent, error) {
-	body, err := json.Marshal(req)
-	if err != nil {
-		return nil, fmt.Errorf("marshal tailor request: %w", err)
+	params := urlValues{}
+	params.Set("job_slug", req.JobSlug)
+	if req.AI {
+		params.Set("ai", "true")
 	}
-	httpReq, err := http.NewRequest(http.MethodGet, c.BaseURL+"/api/tailor/stream", bytes.NewReader(body))
+	url := c.BaseURL + "/api/tailor/stream?" + params.Encode()
+	httpReq, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("create stream request: %w", err)
 	}
-	httpReq.Header.Set("Content-Type", "application/json")
 	httpReq.Header.Set("Accept", "text/event-stream")
-
 	return c.streamSSE(httpReq)
 }
 
-// Analyze calls POST /api/analyze and returns the analysis response.
-func (c *Client) Analyze(req AnalyzeRequest) (*AnalyzeResponse, error) {
-	var resp AnalyzeResponse
+// Analyze calls POST /api/analyze and returns the analysis report.
+func (c *Client) Analyze(req AnalyzeRequest) (*AnalysisReport, error) {
+	var resp AnalysisReport
 	if err := c.postJSON("/api/analyze", req, &resp); err != nil {
 		return nil, err
 	}
 	return &resp, nil
 }
 
-// GetAnalysis calls GET /api/analyze/{jobSlug} and returns the cached analysis.
-func (c *Client) GetAnalysis(jobSlug string) (*AnalyzeResponse, error) {
-	var resp AnalyzeResponse
+// GetAnalysis calls GET /api/analyze/{jobSlug} and returns the cached analysis report.
+func (c *Client) GetAnalysis(jobSlug string) (*AnalysisReport, error) {
+	var resp AnalysisReport
 	if err := c.getJSON("/api/analyze/"+jobSlug, &resp); err != nil {
 		return nil, err
 	}
@@ -396,6 +392,79 @@ func checkStatus(resp *http.Response) error {
 		msg = resp.Status
 	}
 	return fmt.Errorf("engine returned HTTP %d: %s", resp.StatusCode, msg)
+}
+
+// urlValues is a named type for URL query parameters with Set and Encode helpers.
+type urlValues map[string][]string
+
+func (v urlValues) Set(key, val string) { v[key] = []string{val} }
+func (v urlValues) Encode() string {
+	if len(v) == 0 {
+		return ""
+	}
+	// Simple encode: key=val&key2=val2 (no special chars in our params).
+	parts := make([]string, 0, len(v))
+	for k, vals := range v {
+		for _, val := range vals {
+			parts = append(parts, k+"="+val)
+		}
+	}
+	// Sort for determinism.
+	for i := 1; i < len(parts); i++ {
+		for j := i; j > 0 && parts[j] < parts[j-1]; j-- {
+			parts[j], parts[j-1] = parts[j-1], parts[j]
+		}
+	}
+	result := ""
+	for i, p := range parts {
+		if i > 0 {
+			result += "&"
+		}
+		result += p
+	}
+	return result
+}
+
+// buildQueryParams converts a BuildRequest into URL query parameters.
+func buildQueryParams(req BuildRequest) urlValues {
+	params := urlValues{}
+	params.Set("template", req.Template)
+	params.Set("format", req.Format)
+	if req.JobSlug != "" {
+		params.Set("job_slug", req.JobSlug)
+	}
+	if req.Locale != "" {
+		params.Set("locale", req.Locale)
+	}
+	if req.Analyze {
+		params.Set("analyze", "true")
+	} else {
+		params.Set("analyze", "false")
+	}
+	return params
+}
+
+// postQuery sends a POST request to path with query parameters (no body) and decodes the response.
+func (c *Client) postQuery(path string, params urlValues, out interface{}) error {
+	url := c.BaseURL + path
+	if len(params) > 0 {
+		url += "?" + params.Encode()
+	}
+	resp, err := c.HTTPClient.Post(url, "application/json", nil)
+	if err != nil {
+		return fmt.Errorf("POST %s: %w", path, err)
+	}
+	defer resp.Body.Close()
+	if err := checkStatus(resp); err != nil {
+		return err
+	}
+	if out == nil {
+		return nil
+	}
+	if err := json.NewDecoder(resp.Body).Decode(out); err != nil {
+		return fmt.Errorf("decode response from %s: %w", path, err)
+	}
+	return nil
 }
 
 // dotKeyToPatch converts a dot-notation key like "ai.model" and value "gpt-4o"

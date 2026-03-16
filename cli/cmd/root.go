@@ -4,6 +4,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/resumeforge/resumeforge/client"
 	"github.com/spf13/cobra"
@@ -41,6 +42,11 @@ func Execute() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
+}
+
+// joinStrings joins a slice of strings with ", ".
+func joinStrings(ss []string) string {
+	return strings.Join(ss, ", ")
 }
 
 func init() {

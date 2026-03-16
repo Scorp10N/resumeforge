@@ -61,8 +61,12 @@ func runBuild(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Printf("Build complete: %s\n", resp.OutputPath)
-	if resp.AnalysisSummary != "" {
-		fmt.Printf("\nAnalysis summary:\n%s\n", resp.AnalysisSummary)
+	if resp.Analysis != nil {
+		fmt.Printf("\nAnalysis: %s  (%d findings, %d critical)\n",
+			resp.Analysis.OverallLabel,
+			resp.Analysis.TotalFindings,
+			resp.Analysis.CriticalFindings,
+		)
 	}
 	return nil
 }

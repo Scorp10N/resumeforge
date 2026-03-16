@@ -46,9 +46,7 @@ func runTailor(cmd *cobra.Command, args []string) error {
 
 	req := client.TailorRequest{
 		JobSlug: tailorJob,
-		JobFile: tailorJobFile,
 		AI:      tailorAI,
-		Model:   tailorModel,
 	}
 
 	if tailorStream {
@@ -60,7 +58,16 @@ func runTailor(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("tailor failed: %w", err)
 	}
 
-	fmt.Println(resp.Message)
+	fmt.Printf("Tailored for: %s\n", resp.JobSlug)
+	if resp.TailoredSummary != "" {
+		fmt.Printf("\nSuggested summary:\n%s\n", resp.TailoredSummary)
+	}
+	if len(resp.MissingKeywords) > 0 {
+		fmt.Printf("\nMissing keywords: %s\n", joinStrings(resp.MissingKeywords))
+	}
+	for _, s := range resp.Suggestions {
+		fmt.Printf("• %s\n", s)
+	}
 	return nil
 }
 

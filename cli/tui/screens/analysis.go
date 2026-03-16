@@ -2,7 +2,6 @@ package screens
 
 import (
 	"fmt"
-	"sort"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/spinner"
@@ -14,7 +13,7 @@ import (
 
 // analysisResultMsg carries the result of a general analysis fetch.
 type analysisResultMsg struct {
-	resp *client.AnalyzeResponse
+	resp *client.AnalysisReport
 	err  error
 }
 
@@ -27,7 +26,7 @@ type AnalysisModel struct {
 	viewport viewport.Model
 	loading  bool
 	err      string
-	result   *client.AnalyzeResponse
+	result   *client.AnalysisReport
 }
 
 // NewAnalysis creates a new AnalysisModel.
@@ -77,7 +76,7 @@ func (m AnalysisModel) Update(msg tea.Msg) (AnalysisModel, tea.Cmd) {
 		} else {
 			m.err = ""
 			m.result = msg.resp
-			m.viewport.SetContent(msg.resp.Report)
+			m.viewport.SetContent(buildReportText(msg.resp))
 			m.viewport.GotoTop()
 		}
 
@@ -113,17 +112,16 @@ func (m AnalysisModel) View() string {
 		return b.String()
 	}
 
-	// Score bars.
-	if len(m.result.Scores) > 0 {
+	// Score bars from Results.
+	if len(m.result.Results) > 0 {
 		b.WriteString(sectionStyle.Render("Scores"))
 		b.WriteString("\n")
-		keys := make([]string, 0, len(m.result.Scores))
-		for k := range m.result.Scores {
-			keys = append(keys, k)
-		}
-		sort.Strings(keys)
-		for _, k := range keys {
-			b.WriteString(bodyStyle.Render(renderScoreBar(k, m.result.Scores[k])))
+		for _, r := range m.result.Results {
+			ratio := 0.0
+			if r.MaxScore > 0 {
+				ratio = r.Score / r.MaxScore
+			}
+			b.WriteString(bodyStyle.Render(renderScoreBar(r.Analyzer, ratio)))
 			b.WriteString("\n")
 		}
 		b.WriteString("\n")
@@ -145,4 +143,29 @@ func fetchAnalysis(c *client.Client) tea.Cmd {
 		resp, err := c.Analyze(client.AnalyzeRequest{})
 		return analysisResultMsg{resp: resp, err: err}
 	}
+}
+
+// buildReportText renders an AnalysisReport as a text string for the viewport.
+func buildReportText(r *client.AnalysisReport) string {
+	if r == nil {
+		return ""
+	}
+	var b strings.Builder
+	b.WriteString(fmt.Sprintf("Overall: %s (%.0f%%)\n", r.OverallLabel, r.OverallScore*100))
+	b.WriteString(fmt.Sprintf("Findings: %d total, %d critical\n\n", r.TotalFindings, r.CriticalFindings))
+	for _, res := range r.Results {
+		b.WriteString(fmt.Sprintf("▸ %-25s %s\n", res.Analyzer+":", res.Label))
+		for _, f := range res.Findings {
+			prefix := "  • "
+			if f.Severity == "critical" || f.Severity == "high" {
+				prefix = "  ✗ "
+			}
+			b.WriteString(prefix + f.Message + "\n")
+			if f.Suggestion != "" {
+				b.WriteString("    → " + f.Suggestion + "\n")
+			}
+		}
+		b.WriteString("\n")
+	}
+	return b.String()
 }
