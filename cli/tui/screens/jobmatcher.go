@@ -20,7 +20,7 @@ type jobsLoadedMsg struct {
 
 // matchResultMsg carries analysis results for the selected job.
 type matchResultMsg struct {
-	resp *client.AnalyzeResponse
+	resp *client.AnalysisReport
 	err  error
 }
 
@@ -40,7 +40,7 @@ type JobMatcherModel struct {
 	loading   bool
 	analyzing bool
 	spinner   spinner.Model
-	result    *client.AnalyzeResponse
+	result    *client.AnalysisReport
 	err       string
 }
 
