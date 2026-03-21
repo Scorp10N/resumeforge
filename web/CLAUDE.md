@@ -1,3 +1,11 @@
+## Project Configuration
+
+- **Language**: TypeScript
+- **Package Manager**: npm
+- **Add-ons**: tailwindcss
+
+---
+
 # Web Frontend Client
 
 SvelteKit application. Communicates with engine via REST API + SSE.
