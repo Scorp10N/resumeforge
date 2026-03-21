@@ -12,7 +12,7 @@ func TestBuildRequest_Serialization(t *testing.T) {
 		Template: "modern",
 		Format:   "docx",
 		JobSlug:  "bank-appsec",
-		Lang:     "he",
+		Locale:   "he",
 		Analyze:  true,
 	}
 	data, err := json.Marshal(req)
@@ -29,7 +29,7 @@ func TestBuildRequest_Serialization(t *testing.T) {
 		"template": "modern",
 		"format":   "docx",
 		"job_slug": "bank-appsec",
-		"lang":     "he",
+		"locale":   "he",
 		"analyze":  true,
 	}
 	for k, want := range checks {
@@ -43,7 +43,6 @@ func TestTailorRequest_Serialization(t *testing.T) {
 	req := client.TailorRequest{
 		JobSlug: "bank-appsec",
 		AI:      true,
-		Model:   "claude-opus-4-20250514",
 	}
 	data, err := json.Marshal(req)
 	if err != nil {
@@ -57,9 +56,6 @@ func TestTailorRequest_Serialization(t *testing.T) {
 	}
 	if m["ai"] != true {
 		t.Errorf("ai = %v", m["ai"])
-	}
-	if m["model"] != "claude-opus-4-20250514" {
-		t.Errorf("model = %v", m["model"])
 	}
 }
 
