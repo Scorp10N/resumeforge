@@ -50,8 +50,8 @@ func TestBuild(t *testing.T) {
 		}
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(client.BuildResponse{
-			OutputPath:      "/output/resume.pdf",
-			AnalysisSummary: "ATS: 85%",
+			OutputPath: "/output/resume.pdf",
+			Analysis:   &client.AnalysisReport{OverallLabel: "Good"},
 		})
 	}))
 	defer srv.Close()
@@ -64,8 +64,8 @@ func TestBuild(t *testing.T) {
 	if resp.OutputPath != "/output/resume.pdf" {
 		t.Errorf("OutputPath = %q, want %q", resp.OutputPath, "/output/resume.pdf")
 	}
-	if resp.AnalysisSummary != "ATS: 85%" {
-		t.Errorf("AnalysisSummary = %q, want %q", resp.AnalysisSummary, "ATS: 85%")
+	if resp.Analysis == nil || resp.Analysis.OverallLabel != "Good" {
+		t.Errorf("Analysis.OverallLabel = %q, want %q", resp.Analysis.OverallLabel, "Good")
 	}
 }
 
@@ -88,7 +88,7 @@ func TestTailor(t *testing.T) {
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(client.TailorResponse{Message: "Resume tailored successfully"})
+		json.NewEncoder(w).Encode(client.TailorResponse{TailoredSummary: "Resume tailored successfully"})
 	}))
 	defer srv.Close()
 
@@ -96,8 +96,8 @@ func TestTailor(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Tailor() error: %v", err)
 	}
-	if resp.Message != "Resume tailored successfully" {
-		t.Errorf("Message = %q", resp.Message)
+	if resp.TailoredSummary != "Resume tailored successfully" {
+		t.Errorf("TailoredSummary = %q", resp.TailoredSummary)
 	}
 }
 
@@ -108,9 +108,11 @@ func TestAnalyze(t *testing.T) {
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(client.AnalyzeResponse{
-			Report: "All good",
-			Scores: map[string]float64{"ats": 0.85, "readability": 0.90},
+		json.NewEncoder(w).Encode(client.AnalysisReport{
+			OverallScore: 0.85,
+			Results: []client.AnalysisResult{
+				{Analyzer: "ats", Score: 0.85, MaxScore: 1.0, Label: "Good"},
+			},
 		})
 	}))
 	defer srv.Close()
@@ -119,8 +121,11 @@ func TestAnalyze(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Analyze() error: %v", err)
 	}
-	if resp.Scores["ats"] != 0.85 {
-		t.Errorf("ats score = %.2f, want 0.85", resp.Scores["ats"])
+	if resp.OverallScore != 0.85 {
+		t.Errorf("OverallScore = %.2f, want 0.85", resp.OverallScore)
+	}
+	if len(resp.Results) == 0 || resp.Results[0].Analyzer != "ats" {
+		t.Errorf("Results[0].Analyzer = %q, want %q", resp.Results[0].Analyzer, "ats")
 	}
 }
 
@@ -131,7 +136,7 @@ func TestGetAnalysis(t *testing.T) {
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(client.AnalyzeResponse{Report: "cached"})
+		json.NewEncoder(w).Encode(client.AnalysisReport{OverallLabel: "cached"})
 	}))
 	defer srv.Close()
 
@@ -139,8 +144,8 @@ func TestGetAnalysis(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetAnalysis() error: %v", err)
 	}
-	if resp.Report != "cached" {
-		t.Errorf("Report = %q", resp.Report)
+	if resp.OverallLabel != "cached" {
+		t.Errorf("OverallLabel = %q", resp.OverallLabel)
 	}
 }
 
@@ -192,8 +197,8 @@ func TestListTemplates(t *testing.T) {
 		}
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode([]client.TemplateInfo{
-			{Name: "classic", Description: "Classic layout", Formats: []string{"pdf", "docx"}, ATSFriendly: true},
-			{Name: "modern", Description: "Modern layout", Formats: []string{"pdf"}, ATSFriendly: false},
+			{Name: "classic", Description: "Classic layout", SupportedFormats: []string{"pdf", "docx"}, ATSFriendly: true},
+			{Name: "modern", Description: "Modern layout", SupportedFormats: []string{"pdf"}, ATSFriendly: false},
 		})
 	}))
 	defer srv.Close()

@@ -2,7 +2,6 @@ package screens
 
 import (
 	"fmt"
-	"sort"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/spinner"
@@ -170,30 +169,22 @@ func (m JobMatcherModel) View() string {
 		b.WriteString(sectionStyle.Render("Results"))
 		b.WriteString("\n")
 
-		if len(m.result.Scores) > 0 {
-			keys := make([]string, 0, len(m.result.Scores))
-			for k := range m.result.Scores {
-				keys = append(keys, k)
-			}
-			sort.Strings(keys)
-
-			for _, k := range keys {
-				score := m.result.Scores[k]
-				b.WriteString(bodyStyle.Render(renderScoreBar(k, score)))
+		if len(m.result.Results) > 0 {
+			for _, r := range m.result.Results {
+				ratio := 0.0
+				if r.MaxScore > 0 {
+					ratio = r.Score / r.MaxScore
+				}
+				b.WriteString(bodyStyle.Render(renderScoreBar(r.Analyzer, ratio)))
 				b.WriteString("\n")
 			}
 			b.WriteString("\n")
 		}
 
-		if m.result.Report != "" {
-			// Show first 20 lines of the report.
-			lines := strings.SplitN(m.result.Report, "\n", 21)
-			if len(lines) > 20 {
-				lines = append(lines[:20], "  … (use resumeforge analyze for full report)")
-			}
-			b.WriteString(sectionStyle.Render("Report Preview"))
+		if m.result.OverallLabel != "" {
+			b.WriteString(bodyStyle.Render(fmt.Sprintf("Overall: %s (%.0f%%)", m.result.OverallLabel, m.result.OverallScore*100)))
 			b.WriteString("\n")
-			b.WriteString(bodyStyle.Render(strings.Join(lines, "\n")))
+			b.WriteString(helpStyle.Render("  (use resumeforge analyze for full report)"))
 			b.WriteString("\n")
 		}
 	}

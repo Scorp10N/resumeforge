@@ -295,6 +295,7 @@ Report remaining issues that need manual attention.
 **Purpose:** Build data layer — Pydantic models, JSON store, migrations
 
 ```
+0. Use find-docs to fetch current Pydantic v2 docs (field validators, model_config, model_validator) before writing any models.
 Read DESIGN.md sections "Data Model" and "Repository Structure"
 - Create all Pydantic models in engine/resumeforge/data/schema.py
 - Create engine/resumeforge/data/store.py with CRUD operations
@@ -310,6 +311,7 @@ Output: schema.py, store.py, sample JSON, passing tests
 **Purpose:** Build FastAPI REST API layer
 
 ```
+0. Use find-docs to fetch current FastAPI docs (StreamingResponse, SSE patterns, Depends, response_model) and Pydantic v2 response model patterns before writing any routes.
 Read DESIGN.md section "Engine API Contract"
 - Create engine/resumeforge/api/app.py (FastAPI app, CORS, OpenAPI)
 - Implement all routes from DESIGN.md: build, tailor, analyze, data, templates
@@ -325,6 +327,7 @@ Output: app.py, all route files, passing API tests
 **Purpose:** Build export pipeline
 
 ```
+0. Use find-docs to fetch current python-docx docs (Document, Paragraph, Run, styles) and WeasyPrint docs (HTML/CSS to PDF) before implementing exporters.
 Read DESIGN.md sections "Export Engine" and "Template System"
 - Create BaseExporter ABC in engine/resumeforge/export/base.py
 - Implement MarkdownExporter, PdfExporter, DocxExporter
@@ -340,6 +343,7 @@ Output: base.py, 3 exporters, classic template, passing tests
 **Purpose:** Build AI provider layer
 
 ```
+0. Use find-docs to fetch current LiteLLM docs (completion(), acompletion(), provider routing, model name formats) before writing the provider wrapper.
 Read DESIGN.md section "AI Provider Layer"
 - Create engine/resumeforge/ai/provider.py wrapping LiteLLM
 - Create all prompt templates in engine/resumeforge/ai/prompts/
@@ -386,6 +390,7 @@ Output: go.mod, client package, cmd package, goreleaser.yml, passing tests
 **Purpose:** Build the Go TUI (Bubble Tea screens)
 
 ```
+0. Use find-docs to fetch current Bubble Tea v1.1.0 docs (Model interface, Update/View/Init, Cmd, Msg patterns) and Lip Gloss v0.13.0 docs (Style, NewStyle, rendering) — the project uses these specific versions which have breaking changes from earlier releases.
 Read DESIGN.md section "TUI"
 Read cli/CLAUDE.md for conventions
 - Create cli/tui/app.go as main Bubble Tea application
@@ -402,6 +407,7 @@ Output: tui app.go, screen modules, manual test guide
 **Purpose:** Build the SvelteKit web frontend
 
 ```
+0. Use find-docs to fetch current Svelte 5 Runes docs ($state, $derived, $effect, $props syntax) and SvelteKit docs (routing, load functions, SSE/streaming) before writing any components or pages — Svelte 5 Runes are a post-training-cutoff API and will be hallucinated incorrectly without docs.
 Read DESIGN.md sections "Web Frontend" and "Engine API Contract"
 Read web/CLAUDE.md for conventions
 - Set up SvelteKit project in web/ (npm create svelte@latest)
