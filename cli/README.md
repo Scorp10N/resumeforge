@@ -17,7 +17,7 @@ Go standalone client for ResumeForge. Single binary — no Python runtime requir
 
 ```bash
 cd cli
-go build -o resumeforge ./...
+go build -o resumeforge .
 ```
 
 Cross-platform release builds:
