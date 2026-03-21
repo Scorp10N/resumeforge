@@ -1,6 +1,6 @@
 # ResumeForge — Roadmap
 
-**Status:** Phase 6 in progress
+**Status:** Phase 6 complete
 
 Legend: ✅ Complete · 🔄 In Progress · ⬜ Planned
 
@@ -68,16 +68,16 @@ Full SvelteKit web client with typed API client and all routes.
 
 ---
 
-## Phase 6 — Templates + i18n 🔄
+## Phase 6 — Templates + i18n ✅
 
 Additional templates and multi-language support.
 
-- [ ] `modern` template — two-column layout, accent color sidebar
-- [ ] `minimal` template — clean single-column, maximum whitespace
-- [ ] `executive` template — premium single-column for senior roles
-- [ ] Babel i18n infrastructure — `.po` message catalogs for en and he
-- [ ] Locale-aware date formatting (`format_date` utility)
-- [ ] Section label translations integrated into all templates
+- [x] `modern` template — two-column layout, accent color sidebar
+- [x] `minimal` template — clean single-column, maximum whitespace
+- [x] `executive` template — premium single-column for senior roles
+- [x] Babel i18n infrastructure — `.po` message catalogs for en and he
+- [x] Locale-aware date formatting (`format_date` utility)
+- [x] Section label translations integrated into all templates
 
 ---
 

@@ -1,0 +1,16 @@
+[template]
+name = "Executive"
+description = "Premium single-column for senior leadership and executive roles"
+author = "ResumeForge"
+version = "1.0"
+supported_formats = ["md", "pdf", "docx"]
+max_pages = 2
+ats_friendly = true
+
+[style]
+font_family = "Garamond, Georgia, serif"
+font_size_body = 11
+font_size_heading = 13
+color_primary = "#1a1a2e"
+color_accent = "#8B7355"
+color_text = "#222222"

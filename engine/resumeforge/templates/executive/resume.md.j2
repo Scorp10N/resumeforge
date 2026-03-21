@@ -9,45 +9,33 @@
 ---
 {% if profile.summary %}
 
-## {{ _("Professional Summary") }}
+## Executive Summary
 
 {{ profile.summary }}
 {% endif %}
 
 ---
 
-## {{ _("Core Competencies") }}
-
-{% for cat in skills.categories | sort(attribute='priority') %}
-**{{ cat.label }}:** {{ cat.items | join(', ') }}
-{% endfor %}
-{% if skills.exploring %}
-
-*{{ _("Exploring") }}:* {% for item in skills.exploring %}{{ item.label }}: {{ item.items | join(', ') }}{% if not loop.last %}; {% endif %}{% endfor %}
-{% endif %}
-
----
-
-## {{ _("Experience") }}
+## Professional Experience
 
 {% for pos in experience.positions | sort(attribute='priority') %}
 ### {{ pos.title }} — {{ pos.company }}
-*{{ format_date(pos.start_date, locale) }} – {{ format_date(pos.end_date, locale) or _("Present") if not pos.is_current else _("Present") }}*{% if pos.location %}  |  {{ pos.location }}{% endif %}
+*{{ pos.start_date }} – {{ 'Present' if pos.is_current else (pos.end_date or '') }}*{% if pos.location %}  |  {{ pos.location }}{% endif %}
 
 {% for bullet in pos.bullets %}
 - {{ bullet.text }}
 {% endfor %}
 
 {% endfor %}
-
----
 {% if education.entries %}
 
-## {{ _("Education") }}
+---
+
+## Education
 
 {% for edu in education.entries | sort(attribute='priority') %}
 **{{ edu.degree }}{% if edu.field %} in {{ edu.field }}{% endif %}** — {{ edu.institution }}
-{{ format_date(edu.start_date, locale) }} – {{ format_date(edu.end_date, locale) or _("Present") }}{% if edu.location %}  |  {{ edu.location }}{% endif %}
+{{ edu.start_date }} – {{ edu.end_date or 'Present' }}{% if edu.location %}  |  {{ edu.location }}{% endif %}
 {% for note in edu.notes %}
 - {{ note }}
 {% endfor %}
@@ -58,7 +46,7 @@
 
 ---
 
-## {{ _("Projects") }}
+## Notable Projects
 
 {% for proj in projects.projects | sort(attribute='priority') %}
 ### {{ proj.name }}{% if proj.technologies %}  *({{ proj.technologies | join(', ') }})*{% endif %}
@@ -71,11 +59,23 @@
 
 {% endfor %}
 {% endif %}
+
+---
+
+## Core Competencies
+
+{% for cat in skills.categories | sort(attribute='priority') %}
+**{{ cat.label }}:** {{ cat.items | join(', ') }}
+{% endfor %}
+{% if skills.exploring %}
+
+*Currently Exploring:* {% for item in skills.exploring %}{{ item.label }}: {{ item.items | join(', ') }}{% if not loop.last %}; {% endif %}{% endfor %}
+{% endif %}
 {% if certifications.certifications %}
 
 ---
 
-## {{ _("Certifications") }}
+## Certifications
 
 {% for cert in certifications.certifications %}
 - **{{ cert.name }}** — {{ cert.issuer }} ({{ cert.date }}){% if cert.expiry %} · Expires {{ cert.expiry }}{% endif %}

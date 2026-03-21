@@ -1,0 +1,34 @@
+# English UI labels for ResumeForge
+# Copyright (C) 2026 ResumeForge
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: en\n"
+
+msgid "Professional Summary"
+msgstr "Professional Summary"
+
+msgid "Core Competencies"
+msgstr "Core Competencies"
+
+msgid "Experience"
+msgstr "Experience"
+
+msgid "Education"
+msgstr "Education"
+
+msgid "Projects"
+msgstr "Projects"
+
+msgid "Certifications"
+msgstr "Certifications"
+
+msgid "Present"
+msgstr "Present"
+
+msgid "Languages"
+msgstr "Languages"
+
+msgid "Exploring"
+msgstr "Currently Exploring"

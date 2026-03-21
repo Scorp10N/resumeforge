@@ -1,0 +1,17 @@
+[template]
+name = "Minimal"
+description = "Clean single-column layout with maximum whitespace — pure typography"
+author = "ResumeForge"
+version = "1.0"
+supported_formats = ["md", "pdf", "docx"]
+max_pages = 2
+ats_friendly = true
+
+[style]
+font_family = "Georgia, serif"
+font_size_body = 10
+font_size_heading = 11
+color_primary = "#000000"
+color_accent = "#000000"
+color_text = "#111111"
+color_secondary = "#666666"
