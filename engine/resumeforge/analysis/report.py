@@ -7,8 +7,8 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from resumeforge.analysis.base import AnalysisResult, Severity
 from resumeforge.analysis.ats_score import ATSScoreAnalyzer
+from resumeforge.analysis.base import AnalysisResult, Severity
 from resumeforge.analysis.gap_analysis import GapAnalyzer
 from resumeforge.analysis.grammar import GrammarAnalyzer
 from resumeforge.analysis.quantification import QuantificationAnalyzer
@@ -86,7 +86,7 @@ def run_all_analyzers(
     weights = [1.0, 1.0, 2.0 if has_job else 0.0, 2.0 if has_job else 0.0, 1.0]
     total_weight = sum(weights)
     if total_weight:
-        overall = sum(r.score * w for r, w in zip(results, weights)) / total_weight
+        overall = sum(r.score * w for r, w in zip(results, weights, strict=False)) / total_weight
     else:
         overall = sum(r.score for r in results) / len(results) if results else 0.0
 

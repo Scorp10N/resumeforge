@@ -8,7 +8,6 @@ from pydantic import BaseModel
 
 from resumeforge.analysis.report import AnalysisReport
 
-
 # ---------------------------------------------------------------------------
 # Common
 # ---------------------------------------------------------------------------

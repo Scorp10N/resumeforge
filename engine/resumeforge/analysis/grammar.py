@@ -163,7 +163,7 @@ def _ai_checks(context: ResumeContext, ai_provider: object | None) -> list[Findi
     if not (hasattr(ai_provider, "enabled") and hasattr(ai_provider, "complete")):
         return []
 
-    if not ai_provider.enabled:  # type: ignore[union-attr]
+    if not ai_provider.enabled:  # type: ignore[attr-defined]
         return []
 
     # Build a compact resume text for the AI to inspect
@@ -176,7 +176,7 @@ def _ai_checks(context: ResumeContext, ai_provider: object | None) -> list[Findi
             lines.append(f"  - {b.text}")
     resume_text = "\n".join(lines)
 
-    raw = ai_provider.complete(  # type: ignore[union-attr]
+    raw = ai_provider.complete(  # type: ignore[attr-defined]
         prompt=f"Review this resume text for language quality:\n\n{resume_text}",
         system=_GRAMMAR_SYSTEM,
         temperature=0.2,

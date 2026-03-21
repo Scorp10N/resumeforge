@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
-import pytest
-
 from resumeforge.analysis.ats_score import ATSScoreAnalyzer
 from resumeforge.analysis.gap_analysis import GapAnalyzer
 from resumeforge.analysis.grammar import GrammarAnalyzer
@@ -27,7 +25,6 @@ from resumeforge.data.schema import (
     SkillCategory,
     Skills,
 )
-
 
 # ---------------------------------------------------------------------------
 # Shared test fixture factory
@@ -184,7 +181,8 @@ class TestReadabilityAnalyzer:
 
     def test_long_bullet_flagged(self) -> None:
         long_bullet = "Designed and implemented a highly complex distributed system " \
-                      "that involved many microservices and numerous integration points across teams."
+                      "that involved many microservices and numerous integration points " \
+                      "across teams globally resulting in significant measurable improvements to reliability."
         ctx = _make_context(bullets=[long_bullet, "Short bullet.", "Another bullet."])
         result = ReadabilityAnalyzer().analyze(ctx)
         messages = [f.message for f in result.findings]

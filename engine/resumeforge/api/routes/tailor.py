@@ -4,14 +4,14 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import AsyncGenerator
+from collections.abc import AsyncGenerator
 
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 
 from resumeforge.ai.provider import AIProvider
 from resumeforge.ai.tailor import ResumeTailor
-from resumeforge.api.errors import bad_request, not_found
+from resumeforge.api.errors import not_found
 from resumeforge.api.models import TailorRequest, TailorResponse
 from resumeforge.core.builder import ResumeBuilder
 from resumeforge.data import store

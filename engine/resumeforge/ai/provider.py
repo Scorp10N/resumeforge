@@ -38,7 +38,7 @@ class AIProvider:
             return ""
 
         try:
-            import litellm  # type: ignore[import-untyped]
+            import litellm
 
             messages: list[_Message] = [
                 {"role": "system", "content": system},
@@ -65,7 +65,7 @@ class AIProvider:
             return ""
 
     @classmethod
-    def from_meta(cls) -> "AIProvider":
+    def from_meta(cls) -> AIProvider:
         """Create an AIProvider from the current meta.json config."""
         from resumeforge.data.store import get_meta
 

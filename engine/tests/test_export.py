@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import tempfile
 from pathlib import Path
 
 import pytest
@@ -14,7 +13,6 @@ from resumeforge.data.schema import (
     Education,
     EducationEntry,
     Experience,
-    JobDescription,
     Meta,
     Position,
     Profile,

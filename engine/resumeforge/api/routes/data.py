@@ -4,12 +4,11 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Any
 
 from fastapi import APIRouter, Query
 from fastapi.responses import FileResponse
 
-from resumeforge.api.errors import bad_request, not_found
+from resumeforge.api.errors import not_found
 from resumeforge.api.models import ImportResponse
 from resumeforge.data import store
 from resumeforge.data.schema import (
