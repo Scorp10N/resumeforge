@@ -47,7 +47,7 @@ func runBuild(cmd *cobra.Command, args []string) error {
 		Template: buildTemplate,
 		Format:   buildFormat,
 		JobSlug:  buildJob,
-		Lang:     buildLang,
+		Locale:   buildLang,
 		Analyze:  buildAnalyze,
 	}
 

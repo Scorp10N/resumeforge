@@ -67,7 +67,7 @@ func runTemplatesList(cmd *cobra.Command, args []string) error {
 			ats = " [ATS-friendly]"
 		}
 		fmt.Fprintf(cmd.OutOrStdout(), "  %-15s %s%s\n", t.Name, t.Description, ats)
-		fmt.Fprintf(cmd.OutOrStdout(), "               formats: %v\n", t.Formats)
+		fmt.Fprintf(cmd.OutOrStdout(), "               formats: %v\n", t.SupportedFormats)
 	}
 	return nil
 }
