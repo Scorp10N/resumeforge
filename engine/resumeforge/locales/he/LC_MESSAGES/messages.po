@@ -1,0 +1,33 @@
+# Hebrew UI labels for ResumeForge
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: he\n"
+
+msgid "Professional Summary"
+msgstr "תקציר מקצועי"
+
+msgid "Core Competencies"
+msgstr "יכולות ליבה"
+
+msgid "Experience"
+msgstr "ניסיון מקצועי"
+
+msgid "Education"
+msgstr "השכלה"
+
+msgid "Projects"
+msgstr "פרויקטים"
+
+msgid "Certifications"
+msgstr "הסמכות"
+
+msgid "Present"
+msgstr "הווה"
+
+msgid "Languages"
+msgstr "שפות"
+
+msgid "Exploring"
+msgstr "בחקירה"

@@ -1,0 +1,18 @@
+[template]
+name = "Modern"
+description = "Two-column layout with accent sidebar — visual impact for tech/creative roles"
+author = "ResumeForge"
+version = "1.0"
+supported_formats = ["md", "pdf"]
+max_pages = 2
+ats_friendly = false
+
+[style]
+font_family = "Calibri, Arial, sans-serif"
+font_size_body = 10
+font_size_heading = 11
+color_primary = "#2C3E50"
+color_accent = "#E74C3C"
+color_text = "#333333"
+color_sidebar_bg = "#2C3E50"
+color_sidebar_text = "#FFFFFF"

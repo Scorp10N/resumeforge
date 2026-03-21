@@ -7,6 +7,8 @@ from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader
 
+from resumeforge.core.i18n import format_date as _format_date
+from resumeforge.core.i18n import get_translator
 from resumeforge.data.schema import ResumeContext
 from resumeforge.export.base import BaseExporter, ExportError
 
@@ -37,6 +39,9 @@ class MarkdownExporter(BaseExporter):
                 trim_blocks=True,
                 lstrip_blocks=True,
             )
+            translator = get_translator(context.locale)
+            env.globals["_"] = translator
+            env.globals["format_date"] = _format_date
             tmpl = env.get_template("resume.md.j2")
             rendered = tmpl.render(
                 profile=context.profile,

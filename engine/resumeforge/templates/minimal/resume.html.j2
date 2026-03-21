@@ -19,10 +19,10 @@
     }
 
     body {
-      font-family: "Calibri", "Segoe UI", Arial, sans-serif;
-      color: #333333;
+      font-family: "Georgia", serif;
+      color: #111111;
       background: #ffffff;
-      line-height: 1.4;
+      line-height: 1.6;
     }
 
     /* ------------------------------------------------------------------ */
@@ -30,7 +30,7 @@
     /* ------------------------------------------------------------------ */
     @page {
       size: A4;
-      margin: 0.5in 0.75in;
+      margin: 0.75in 1in;
     }
 
     .resume {
@@ -43,28 +43,27 @@
     /* ------------------------------------------------------------------ */
     .header {
       text-align: center;
-      margin-bottom: 0.5em;
-      border-bottom: 2px solid #1F4E79;
-      padding-bottom: 0.5em;
+      margin-bottom: 1.5em;
     }
 
     .header__name {
-      font-size: 20pt;
+      font-size: 22pt;
       font-weight: bold;
-      color: #1F4E79;
-      letter-spacing: 0.04em;
+      color: #000000;
+      letter-spacing: 0.02em;
+      margin-bottom: 0.2em;
     }
 
     .header__title {
-      font-size: 11pt;
-      color: #2E75B6;
-      margin-top: 0.15em;
+      font-size: 10pt;
+      color: #444444;
+      font-style: italic;
+      margin-bottom: 0.4em;
     }
 
     .header__contact {
-      font-size: 9pt;
-      color: #555555;
-      margin-top: 0.25em;
+      font-size: 8.5pt;
+      color: #666666;
     }
 
     .header__contact span + span::before {
@@ -76,18 +75,18 @@
     /* Section                                                              */
     /* ------------------------------------------------------------------ */
     .section {
-      margin-top: 0.75em;
+      margin-top: 1.4em;
     }
 
     .section__heading {
-      font-size: 10pt;
+      font-size: 7.5pt;
       font-weight: bold;
       text-transform: uppercase;
-      color: #1F4E79;
-      letter-spacing: 0.06em;
-      border-bottom: 1px solid #1F4E79;
-      padding-bottom: 0.1em;
-      margin-bottom: 0.4em;
+      letter-spacing: 0.12em;
+      color: #000000;
+      border-bottom: 1px solid #999999;
+      padding-bottom: 0.15em;
+      margin-bottom: 0.7em;
     }
 
     /* ------------------------------------------------------------------ */
@@ -95,32 +94,34 @@
     /* ------------------------------------------------------------------ */
     .summary__text {
       font-size: 10pt;
+      color: #333333;
     }
 
     /* ------------------------------------------------------------------ */
     /* Skills                                                               */
     /* ------------------------------------------------------------------ */
     .skills__category {
-      margin-bottom: 0.2em;
+      margin-bottom: 0.3em;
       font-size: 10pt;
     }
 
     .skills__label {
       font-weight: bold;
+      color: #000000;
     }
 
     .skills__exploring {
-      margin-top: 0.3em;
+      margin-top: 0.4em;
       font-size: 9.5pt;
       font-style: italic;
-      color: #555555;
+      color: #666666;
     }
 
     /* ------------------------------------------------------------------ */
     /* Experience                                                           */
     /* ------------------------------------------------------------------ */
     .position {
-      margin-bottom: 0.6em;
+      margin-bottom: 1em;
     }
 
     .position__header {
@@ -132,8 +133,8 @@
 
     .position__title-company {
       font-weight: bold;
-      font-size: 10.5pt;
-      color: #1F4E79;
+      font-size: 10pt;
+      color: #000000;
     }
 
     .position__dates {
@@ -149,31 +150,37 @@
     }
 
     .position__bullets {
-      margin-top: 0.2em;
-      padding-left: 1.2em;
+      margin-top: 0.3em;
+      padding-left: 1em;
+      list-style: none;
+    }
+
+    [dir="rtl"] .position__bullets {
+      padding-left: 0;
+      padding-right: 1em;
     }
 
     .position__bullets li {
-      margin-bottom: 0.1em;
+      margin-bottom: 0.2em;
       font-size: 10pt;
     }
 
-    /* RTL bullet indent */
-    [dir="rtl"] .position__bullets {
-      padding-left: 0;
-      padding-right: 1.2em;
+    .position__bullets li::before {
+      content: "\2212\00a0";
+      color: #666666;
     }
 
     /* ------------------------------------------------------------------ */
     /* Education                                                            */
     /* ------------------------------------------------------------------ */
     .education__entry {
-      margin-bottom: 0.4em;
+      margin-bottom: 0.7em;
     }
 
     .education__degree {
       font-weight: bold;
       font-size: 10pt;
+      color: #000000;
     }
 
     .education__meta {
@@ -182,79 +189,98 @@
     }
 
     .education__notes {
-      padding-left: 1.2em;
+      padding-left: 1em;
       font-size: 9.5pt;
+      list-style: none;
     }
 
     [dir="rtl"] .education__notes {
       padding-left: 0;
-      padding-right: 1.2em;
+      padding-right: 1em;
+    }
+
+    .education__notes li::before {
+      content: "\2212\00a0";
+      color: #666666;
     }
 
     /* ------------------------------------------------------------------ */
     /* Projects                                                             */
     /* ------------------------------------------------------------------ */
     .project {
-      margin-bottom: 0.5em;
+      margin-bottom: 0.8em;
     }
 
     .project__header {
       font-weight: bold;
-      font-size: 10.5pt;
-      color: #1F4E79;
+      font-size: 10pt;
+      color: #000000;
     }
 
     .project__tech {
       font-weight: normal;
-      font-size: 9.5pt;
+      font-size: 9pt;
       font-style: italic;
-      color: #555555;
+      color: #666666;
     }
 
     .project__description {
       font-size: 10pt;
-      margin-top: 0.1em;
+      margin-top: 0.15em;
     }
 
     .project__bullets {
-      padding-left: 1.2em;
-      margin-top: 0.1em;
-    }
-
-    .project__bullets li {
-      font-size: 10pt;
-      margin-bottom: 0.1em;
+      padding-left: 1em;
+      margin-top: 0.15em;
+      list-style: none;
     }
 
     [dir="rtl"] .project__bullets {
       padding-left: 0;
-      padding-right: 1.2em;
+      padding-right: 1em;
+    }
+
+    .project__bullets li {
+      font-size: 10pt;
+      margin-bottom: 0.15em;
+    }
+
+    .project__bullets li::before {
+      content: "\2212\00a0";
+      color: #666666;
     }
 
     .project__url {
       font-size: 9pt;
-      color: #2E75B6;
+      color: #444444;
     }
 
     /* ------------------------------------------------------------------ */
     /* Certifications                                                       */
     /* ------------------------------------------------------------------ */
     .cert__list {
-      padding-left: 1.2em;
+      padding-left: 1em;
+      list-style: none;
     }
 
     [dir="rtl"] .cert__list {
       padding-left: 0;
-      padding-right: 1.2em;
+      padding-right: 1em;
     }
 
     .cert__list li {
       font-size: 10pt;
-      margin-bottom: 0.15em;
+      margin-bottom: 0.25em;
+    }
+
+    .cert__list li::before {
+      content: "\2212\00a0";
+      color: #666666;
     }
 
     .cert__name {
       font-weight: bold;
+      color: #000000;
     }
 
     .cert__meta {
@@ -287,7 +313,7 @@
   <!-- ================================================================ -->
   {% if profile.summary %}
   <section class="section">
-    <div class="section__heading">{{ _("Professional Summary") }}</div>
+    <div class="section__heading">Summary</div>
     <p class="summary__text">{{ profile.summary }}</p>
   </section>
   {% endif %}
@@ -297,7 +323,7 @@
   <!-- ================================================================ -->
   {% if skills.categories %}
   <section class="section">
-    <div class="section__heading">{{ _("Core Competencies") }}</div>
+    <div class="section__heading">Skills</div>
     {% for cat in skills.categories | sort(attribute='priority') %}
     <div class="skills__category">
       <span class="skills__label">{{ cat.label }}:</span>
@@ -306,7 +332,7 @@
     {% endfor %}
     {% if skills.exploring %}
     <div class="skills__exploring">
-      {{ _("Exploring") }}:
+      Currently Exploring:
       {% for item in skills.exploring %}{{ item.label }}: {{ item.items | join(', ') }}{% if not loop.last %}; {% endif %}{% endfor %}
     </div>
     {% endif %}
@@ -318,12 +344,12 @@
   <!-- ================================================================ -->
   {% if experience.positions %}
   <section class="section">
-    <div class="section__heading">{{ _("Experience") }}</div>
+    <div class="section__heading">Experience</div>
     {% for pos in experience.positions | sort(attribute='priority') %}
     <div class="position">
       <div class="position__header">
         <span class="position__title-company">{{ pos.title }} &mdash; {{ pos.company }}</span>
-        <span class="position__dates">{{ format_date(pos.start_date, locale) }} &ndash; {{ format_date(pos.end_date, locale) or _("Present") if not pos.is_current else _("Present") }}</span>
+        <span class="position__dates">{{ pos.start_date }} &ndash; {{ 'Present' if pos.is_current else (pos.end_date or '') }}</span>
       </div>
       {% if pos.location %}
       <div class="position__location">{{ pos.location }}</div>
@@ -345,14 +371,14 @@
   <!-- ================================================================ -->
   {% if education.entries %}
   <section class="section">
-    <div class="section__heading">{{ _("Education") }}</div>
+    <div class="section__heading">Education</div>
     {% for edu in education.entries | sort(attribute='priority') %}
     <div class="education__entry">
       <div class="education__degree">
         {{ edu.degree }}{% if edu.field %} in {{ edu.field }}{% endif %} &mdash; {{ edu.institution }}
       </div>
       <div class="education__meta">
-        {{ format_date(edu.start_date, locale) }} &ndash; {{ format_date(edu.end_date, locale) or _("Present") }}
+        {{ edu.start_date }} &ndash; {{ edu.end_date or 'Present' }}
         {% if edu.location %} | {{ edu.location }}{% endif %}
         {% if edu.gpa %} | GPA: {{ edu.gpa }}{% endif %}
       </div>
@@ -373,7 +399,7 @@
   <!-- ================================================================ -->
   {% if projects.projects %}
   <section class="section">
-    <div class="section__heading">{{ _("Projects") }}</div>
+    <div class="section__heading">Projects</div>
     {% for proj in projects.projects | sort(attribute='priority') %}
     <div class="project">
       <div class="project__header">
@@ -403,7 +429,7 @@
   <!-- ================================================================ -->
   {% if certifications.certifications %}
   <section class="section">
-    <div class="section__heading">{{ _("Certifications") }}</div>
+    <div class="section__heading">Certifications</div>
     <ul class="cert__list">
       {% for cert in certifications.certifications %}
       <li>
