@@ -52,17 +52,25 @@ go build -o resumeforge ./...
 
 ## Interactive Testing
 
+Start all services together:
+```bash
+make dev   # engine (port 8080) + web (port 5173) — Ctrl+C stops both
+```
+
+Or individually:
+```bash
+make dev-engine   # http://localhost:8080
+make dev-web      # http://localhost:5173
+```
+
 ### Engine — Swagger UI
-Start the engine, then open **http://localhost:8080/docs** in your browser.
+Open **http://localhost:8080/docs** in your browser.
 - `POST /api/build` — build a resume
 - `GET /api/templates` — list available templates
 - `POST /api/analyze` — run quality analysis
 - `GET /api/jobs` — list saved job descriptions
 
 ### Web Frontend
-```bash
-cd web && npm run dev
-```
 Open **http://localhost:5173**. Routes:
 - `/` — Dashboard
 - `/builder` — Build resume with template/format/job selector and SSE progress
@@ -95,27 +103,20 @@ Screens: **Dashboard -> Editor -> Job Matcher -> Analysis**. Press `q` or `Ctrl+
 
 ## Non-Interactive Testing (CI)
 
-### Engine
 ```bash
-cd engine
-uv run pytest -x -v              # full suite (243 tests)
-uv run pytest tests/test_api.py  # single module
-uv run ruff check .              # lint
-uv run mypy resumeforge/         # type check
+make test       # all components
+make lint       # ruff + mypy + go vet + svelte-check
 ```
 
-### CLI
+Or individually:
 ```bash
-cd cli
-go test ./...
-go vet ./...
+make test-engine    # pytest (243 tests)
+make test-cli       # go test
+make test-web       # svelte-check
+make test-integration  # E2E cross-component (auto-starts engine)
 ```
 
-### Web
-```bash
-cd web
-npm run check                    # TypeScript + Svelte type check
-```
+See [tests/README.md](tests/README.md) for the full testing guide.
 
 ---
 
