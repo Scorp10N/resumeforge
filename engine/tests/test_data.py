@@ -11,6 +11,7 @@ from pydantic import ValidationError
 
 from resumeforge.data.migrations import migrate, migrate_file, needs_migration
 from resumeforge.data.schema import (
+    SCHEMA_VERSION,
     AIConfig,
     Bullet,
     Certification,
@@ -26,12 +27,10 @@ from resumeforge.data.schema import (
     Project,
     Projects,
     ResumeContext,
-    Skills,
     SkillCategory,
+    Skills,
     StyleConfig,
-    SCHEMA_VERSION,
 )
-
 
 # ===========================================================================
 # Helpers

@@ -8,7 +8,7 @@ from pathlib import Path
 from fastapi import APIRouter
 from fastapi.responses import FileResponse, Response
 
-from resumeforge.api.errors import bad_request, not_found
+from resumeforge.api.errors import not_found
 from resumeforge.api.models import TemplateInfo
 
 logger = logging.getLogger(__name__)

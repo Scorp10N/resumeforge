@@ -25,9 +25,9 @@ class DocxExporter(BaseExporter):
         output_path = self._resolve_output(output_path)
 
         try:
-            from docx import Document  # type: ignore[import-untyped]
-            from docx.shared import Pt, RGBColor  # type: ignore[import-untyped]
-            from docx.enum.text import WD_ALIGN_PARAGRAPH  # type: ignore[import-untyped]
+            from docx import Document
+            from docx.enum.text import WD_ALIGN_PARAGRAPH
+            from docx.shared import Pt
         except ImportError as exc:
             raise ExportError("python-docx not installed") from exc
 
@@ -125,23 +125,23 @@ class DocxExporter(BaseExporter):
 
 
 def _add_section_heading(doc: object, text: str) -> None:
-    from docx.shared import Pt  # type: ignore[import-untyped]
+    from docx.shared import Pt
 
-    heading = doc.add_paragraph()  # type: ignore[union-attr]
+    heading = doc.add_paragraph()  # type: ignore[attr-defined]
     run = heading.add_run(text.upper())
     run.bold = True
     run.font.size = Pt(10)
     # Add bottom border via paragraph style could be done with XML — keeping simple for v1
-    doc.add_paragraph()  # type: ignore[union-attr]
+    doc.add_paragraph()  # type: ignore[attr-defined]
 
 
-def _add_position(doc: object, pos: Position) -> None:  # type: ignore[type-arg]
-    from docx.shared import Pt  # type: ignore[import-untyped]
+def _add_position(doc: object, pos: Position) -> None:
+    from docx.shared import Pt
 
-    header = doc.add_paragraph()  # type: ignore[union-attr]
+    header = doc.add_paragraph()  # type: ignore[attr-defined]
     header.add_run(f"{pos.title}  –  {pos.company}").bold = True
     dates = f"{pos.start_date} – {'Present' if pos.is_current else (pos.end_date or '')}"
     header.add_run(f"  |  {dates}").font.size = Pt(9)
 
     for bullet in pos.bullets:
-        doc.add_paragraph(bullet.text, style="List Bullet")  # type: ignore[union-attr]
+        doc.add_paragraph(bullet.text, style="List Bullet")  # type: ignore[attr-defined]

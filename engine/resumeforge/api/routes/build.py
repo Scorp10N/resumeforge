@@ -4,16 +4,16 @@ from __future__ import annotations
 
 import json
 import logging
+from collections.abc import AsyncGenerator
 from datetime import datetime
 from pathlib import Path
-from typing import AsyncGenerator
 
 from fastapi import APIRouter, Query
 from fastapi.responses import FileResponse, StreamingResponse
 
 from resumeforge.analysis.report import run_analysis
 from resumeforge.api.errors import bad_request, internal_error, not_found
-from resumeforge.api.models import BuildRequest, BuildResponse
+from resumeforge.api.models import BuildResponse
 from resumeforge.core.builder import ResumeBuilder
 from resumeforge.data import store
 from resumeforge.export.docx_export import DocxExporter

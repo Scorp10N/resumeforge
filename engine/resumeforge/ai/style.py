@@ -73,7 +73,7 @@ class StyleController:
         return instructions.get(self.tone, instructions["professional"])
 
     @classmethod
-    def from_meta(cls) -> "StyleController":
+    def from_meta(cls) -> StyleController:
         """Create a StyleController from the current meta.json config."""
         from resumeforge.data.store import get_meta
 

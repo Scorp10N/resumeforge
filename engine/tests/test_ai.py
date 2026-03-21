@@ -20,11 +20,10 @@ from resumeforge.data.schema import (
     Profile,
     Projects,
     ResumeContext,
-    Skills,
     SkillCategory,
+    Skills,
     StyleConfig,
 )
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -49,6 +48,17 @@ def _make_style_config(**overrides: object) -> StyleConfig:
         "avoid_tool_names_in_bullets": True,
     }
     defaults.update(overrides)
+    # Use model_construct for tests that inject invalid values (bypasses validation
+    # intentionally to test StyleController's own defensive fallback logic).
+    valid_tones = {"professional", "technical", "creative"}
+    valid_bullets = {"action-verb-first", "result-first", "context-action-result"}
+    needs_construct = (
+        defaults.get("tone") not in valid_tones
+        or defaults.get("bullet_style") not in valid_bullets
+        or (isinstance(defaults.get("max_pages"), int) and defaults["max_pages"] < 1)
+    )
+    if needs_construct:
+        return StyleConfig.model_construct(**defaults)
     return StyleConfig.model_validate(defaults)
 
 

@@ -33,7 +33,7 @@ class PdfExporter(BaseExporter):
             raise ExportError(f"HTML template not found: {tmpl_file}")
 
         try:
-            from weasyprint import HTML  # type: ignore[import-untyped]
+            from weasyprint import HTML
         except ImportError as exc:
             raise ExportError(
                 "weasyprint is not installed. Run: uv add weasyprint"

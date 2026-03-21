@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+import contextlib
 import json
-import shutil
 import zipfile
 from pathlib import Path
 from typing import TypeVar
@@ -46,7 +46,7 @@ def _ensure_dirs() -> None:
 # ---------------------------------------------------------------------------
 
 
-def _read(path: Path, model: type[T]) -> T:
+def _read[T: BaseModel](path: Path, model: type[T]) -> T:
     """Read a JSON file into a Pydantic model. Returns default instance if file missing."""
     if not path.exists():
         return model()
@@ -147,10 +147,8 @@ def list_jobs() -> list[JobDescription]:
     _ensure_dirs()
     jobs: list[JobDescription] = []
     for f in sorted(JOBS_DIR.glob("*.json")):
-        try:
+        with contextlib.suppress(json.JSONDecodeError, ValueError):
             jobs.append(JobDescription.model_validate(json.loads(f.read_text(encoding="utf-8"))))
-        except (json.JSONDecodeError, ValueError):
-            pass  # skip malformed files silently
     return jobs
 
 
