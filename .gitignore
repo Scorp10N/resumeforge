@@ -42,3 +42,4 @@ web/.env.*
 # OS
 .DS_Store
 Thumbs.db
+.worktrees/
