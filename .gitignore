@@ -2,6 +2,8 @@
 
 # PII — NEVER commit
 engine/data/profile.json
+*.pdf
+.claude/
 
 # Generated output
 engine/output/
