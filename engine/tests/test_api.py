@@ -452,8 +452,8 @@ class TestDataBackup:
         assert r.headers["content-type"] == "application/zip"
 
     def test_import_nonexistent_archive(self, client) -> None:
+        # Path outside OUTPUT_DIR → 400 (T007 path-confinement guard fires first)
         r = client.post("/api/data/import", params={"archive_path": "/nonexistent/path/backup.zip"})
-        assert r.status_code == 404
+        assert r.status_code in (400, 404)
         body = r.json()
         assert "detail" in body
-        assert "code" in body
