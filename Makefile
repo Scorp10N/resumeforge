@@ -9,7 +9,8 @@ NODE   := cd web && npm run
         test test-engine test-engine-fast test-engine-watch test-engine-module \
         test-cli test-web test-integration \
         lint lint-engine lint-cli lint-web fmt \
-        build-cli build-web
+        build-cli build-web \
+        docker-up docker-down docker-dev docker-logs docker-clean
 
 .DEFAULT_GOAL := help
 
@@ -81,3 +82,19 @@ build-cli: ## CLI: build binary (./resumeforge)
 
 build-web: ## Web: production build
 	$(NODE) build
+
+# ── Docker ───────────────────────────────────────────────────────────────────
+docker-up: ## Start all services in Docker (production mode)
+	docker compose up --build -d
+
+docker-down: ## Stop all Docker services
+	docker compose down
+
+docker-dev: ## Start all services in Docker with hot-reload
+	docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+
+docker-logs: ## Follow Docker service logs
+	docker compose logs -f
+
+docker-clean: ## Remove Docker containers and volumes — DESTROYS resume data
+	docker compose down -v

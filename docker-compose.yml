@@ -1,0 +1,35 @@
+services:
+  engine:
+    build:
+      context: ./engine
+    image: resumeforge-engine:latest
+    ports:
+      - "8080:8080"
+    volumes:
+      - engine_data:/app/data
+      - engine_output:/app/output
+    environment:
+      - CORS_ORIGINS=${CORS_ORIGINS:-}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  web:
+    build:
+      context: ./web
+      args:
+        VITE_ENGINE_URL: ${VITE_ENGINE_URL:-http://localhost:8080}
+    image: resumeforge-web:latest
+    ports:
+      - "3000:3000"
+    depends_on:
+      engine:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  engine_data:
+  engine_output:

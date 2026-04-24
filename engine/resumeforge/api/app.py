@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
@@ -55,17 +56,21 @@ app = FastAPI(
     ],
 )
 
+_extra_origins = [o for o in os.getenv("CORS_ORIGINS", "").split(",") if o]
+_allow_origins = [
+    "http://localhost:3000",   # SvelteKit prod local / generic
+    "http://localhost:4173",   # SvelteKit preview
+    "http://localhost:5173",   # SvelteKit dev
+    "http://localhost:8080",   # CLI / generic local
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:8080",
+    *_extra_origins,           # CORS_ORIGINS env var for remote deploys
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",   # SvelteKit prod local / generic
-        "http://localhost:4173",   # SvelteKit preview
-        "http://localhost:5173",   # SvelteKit dev
-        "http://localhost:8080",   # CLI / generic local
-        "http://127.0.0.1:3000",
-        "http://127.0.0.1:5173",
-        "http://127.0.0.1:8080",
-    ],
+    allow_origins=_allow_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

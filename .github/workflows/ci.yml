@@ -51,3 +51,13 @@ jobs:
         run: make test-web
       - name: Build
         run: cd web && npm run build
+
+  docker:
+    name: Docker build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build engine image
+        run: docker build ./engine -t resumeforge-engine:ci
+      - name: Build web image
+        run: docker build --build-arg VITE_ENGINE_URL=http://localhost:8080 ./web -t resumeforge-web:ci

@@ -51,6 +51,22 @@ All clients talk to the engine over HTTP. See [DESIGN.md](ResumeForge_DESIGN.md)
 
 ## Installation
 
+### Docker (recommended — no local installs needed)
+
+```bash
+git clone https://github.com/Scorp10N/resumeforge.git
+cd resumeforge
+cp .env.example .env          # edit VITE_ENGINE_URL for remote deploys
+docker compose up             # builds images and starts everything
+
+# Engine API + Swagger UI → http://localhost:8080/docs
+# Web UI                  → http://localhost:3000
+```
+
+Data persists in Docker volumes (`engine_data`, `engine_output`). Use `make docker-clean` to wipe.
+
+### From Source
+
 ```bash
 git clone https://github.com/Scorp10N/resumeforge.git
 cd resumeforge

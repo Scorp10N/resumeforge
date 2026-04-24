@@ -1,0 +1,26 @@
+services:
+  engine:
+    volumes:
+      - ./engine:/app
+      - engine_data:/app/data
+      - engine_output:/app/output
+    command:
+      - uv
+      - run
+      - uvicorn
+      - resumeforge.api.app:app
+      - --host
+      - "0.0.0.0"
+      - --port
+      - "8080"
+      - --reload
+
+  web:
+    build:
+      context: ./web
+    volumes:
+      - ./web:/app
+      - /app/node_modules
+    command: ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+    ports:
+      - "5173:5173"
