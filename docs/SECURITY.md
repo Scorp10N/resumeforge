@@ -504,3 +504,25 @@ The following items are acknowledged and deferred for CE given the localhost-onl
 ---
 
 *This document was produced by static code analysis and dependency scanning. It does not replace a dynamic penetration test or a formal security audit.*
+
+---
+
+## Docker Security
+
+### Container Isolation
+- Engine and web containers run as non-root UID 1000 (`appuser`)
+- Engine image uses multi-stage build — build tools (GCC, make) discarded from the final image
+- Resource limits set in `docker-compose.yml` (engine: 2 CPU / 2 GB RAM, web: 0.5 CPU / 256 MB RAM)
+
+### CORS Configuration (T011)
+- `CORS_ORIGINS` env var accepts comma-separated extra origins for remote deploys
+- Wildcard (`*`) is explicitly rejected at startup with a `RuntimeError`
+- Whitespace is stripped from each origin before validation
+- Default: localhost ports 3000, 4173, 5173, 8080 only
+
+### Volume Security
+- Resume data (including PII in `profile.json`) is isolated in named Docker volumes (`engine_data`, `engine_output`)
+- Dev mode source mount (`./engine:/app`) is layered under the named data volume — the named volume takes precedence, preventing the host `data/` directory from being exposed inside the container
+
+### Reporting Vulnerabilities
+See the Reporting section above.

@@ -56,7 +56,16 @@ app = FastAPI(
     ],
 )
 
-_extra_origins = [o for o in os.getenv("CORS_ORIGINS", "").split(",") if o]
+def _parse_cors_origins(raw: str) -> list[str]:
+    origins = [o.strip() for o in raw.split(",") if o.strip()]
+    if "*" in origins:
+        raise RuntimeError(
+            "CORS_ORIGINS must not contain '*'. Use explicit origins (e.g. http://myserver.com:3000)."
+        )
+    return origins
+
+
+_extra_origins = _parse_cors_origins(os.getenv("CORS_ORIGINS", ""))
 _allow_origins = [
     "http://localhost:3000",   # SvelteKit prod local / generic
     "http://localhost:4173",   # SvelteKit preview

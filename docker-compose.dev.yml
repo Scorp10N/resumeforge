@@ -2,7 +2,7 @@ services:
   engine:
     volumes:
       - ./engine:/app
-      - engine_data:/app/data
+      - engine_data:/app/data  # isolates PII (profile.json) from host data/
       - engine_output:/app/output
     command:
       - uv

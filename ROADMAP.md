@@ -114,3 +114,5 @@ Testing, CI, and developer tooling.
 - [x] `tests/integration/` — cross-component E2E tests (auto-starts engine)
 - [x] `.github/workflows/ci.yml` — parallel CI jobs for engine, CLI, web
 - [x] Component READMEs with interactive + non-interactive testing guides
+- [x] Docker Compose release — engine + web containerised, non-root users, multi-stage builds
+- [x] `docker compose up` self-hosted install in README

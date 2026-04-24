@@ -8,7 +8,8 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from resumeforge.api.app import app
+from resumeforge.api.app import _parse_cors_origins, app
+from resumeforge.data import store
 
 
 @pytest.fixture()
@@ -92,3 +93,50 @@ def test_aiconfig_allows_localhost() -> None:
 
     cfg = AIConfig(base_url="http://localhost:11434")  # Ollama / LM Studio
     assert cfg.base_url == "http://localhost:11434"
+
+
+# ---------------------------------------------------------------------------
+# T011 — CORS_ORIGINS env var parsing
+# ---------------------------------------------------------------------------
+class TestCORSOriginsConfig:
+    """T011: _parse_cors_origins correctly handles whitespace and wildcard."""
+
+    def test_normal_origin_is_added(self) -> None:
+        origins = _parse_cors_origins("http://api.example.com:3000")
+        assert "http://api.example.com:3000" in origins
+
+    def test_multiple_origins(self) -> None:
+        origins = _parse_cors_origins("http://a.com,http://b.com")
+        assert origins == ["http://a.com", "http://b.com"]
+
+    def test_whitespace_is_stripped(self) -> None:
+        origins = _parse_cors_origins(" http://example.com:3000 , http://app.local ")
+        assert "http://example.com:3000" in origins
+        assert "http://app.local" in origins
+        assert not any(o != o.strip() for o in origins)
+
+    def test_empty_string_produces_no_extras(self) -> None:
+        origins = _parse_cors_origins("")
+        assert origins == []
+
+    def test_wildcard_raises(self) -> None:
+        with pytest.raises(RuntimeError, match=r"\*"):
+            _parse_cors_origins("*")
+
+    def test_wildcard_mixed_raises(self) -> None:
+        with pytest.raises(RuntimeError, match=r"\*"):
+            _parse_cors_origins("http://ok.com,*")
+
+
+# ---------------------------------------------------------------------------
+# T012 — lifespan initialises data directory
+# ---------------------------------------------------------------------------
+def test_lifespan_calls_init_data_dir(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """T012: Startup lifespan must create data and output directories."""
+    monkeypatch.setattr(store, "DATA_DIR", tmp_path / "data")
+    monkeypatch.setattr(store, "JOBS_DIR", tmp_path / "data" / "jobs")
+    monkeypatch.setattr(store, "OUTPUT_DIR", tmp_path / "output")
+
+    with TestClient(app):
+        assert (tmp_path / "data").is_dir(), "DATA_DIR not created by lifespan"
+        assert (tmp_path / "output").is_dir(), "OUTPUT_DIR not created by lifespan"

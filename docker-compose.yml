@@ -16,6 +16,11 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 2G
 
   web:
     build:
@@ -29,6 +34,11 @@ services:
       engine:
         condition: service_healthy
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
 
 volumes:
   engine_data:

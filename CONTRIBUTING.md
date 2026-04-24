@@ -65,3 +65,23 @@ make lint-web     # svelte-check
 ## Reporting Vulnerabilities
 
 See [docs/SECURITY.md](docs/SECURITY.md).
+
+---
+
+## Docker Development
+
+Start all services with hot-reload:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+```
+
+- Engine auto-reloads on source changes (uvicorn `--reload` + source mount)
+- Web dev server with HMR at http://localhost:5173
+- Data stored in named Docker volumes (separate from `engine/data/` on host)
+
+Wipe all data and start fresh:
+
+```bash
+make docker-clean   # removes volumes — DESTROYS all resume data
+```
