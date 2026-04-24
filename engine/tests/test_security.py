@@ -33,7 +33,7 @@ def test_import_rejects_path_outside_output_dir(client: TestClient) -> None:
 
 def test_import_skips_zip_slip_entry(tmp_path: Path) -> None:
     """A zip entry with path traversal must be silently skipped."""
-    from resumeforge.data.store import DATA_DIR, import_backup  # noqa: PLC0415
+    from resumeforge.data.store import import_backup  # noqa: PLC0415
 
     evil_zip = tmp_path / "evil.zip"
     buf = io.BytesIO()
