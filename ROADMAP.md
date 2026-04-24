@@ -1,8 +1,19 @@
 # ResumeForge — Roadmap
 
-**Status:** Phase 6 complete
+**Status:** v0.1.0 released (April 2026) · Phases 1–6 complete
 
 Legend: ✅ Complete · 🔄 In Progress · ⬜ Planned
+
+---
+
+## v0.1.0 — First Public Release ✅ (April 2026)
+
+- [x] Version-aligned across engine (0.1.0), CLI, and web (0.1.0)
+- [x] MIT License + CONTRIBUTING.md + updated README with install guide
+- [x] STRIDE threat model — all HIGH-severity CVEs patched (T007–T010)
+- [x] 258 engine tests passing (pytest); CLI and web type-check clean
+- [x] GoReleaser cross-platform binaries on GitHub Releases
+- [x] GitHub Pages resume live at https://scorp10n.github.io/resume
 
 ---
 
@@ -81,7 +92,7 @@ Additional templates and multi-language support.
 
 ---
 
-## Phase 7 — Cloud Edition Foundation ⬜
+## Phase 7 — Cloud Edition Foundation ⬜ (planned)
 
 Authentication, cloud storage, and plugin system.
 

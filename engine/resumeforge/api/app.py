@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 
 import uvicorn
 from fastapi import FastAPI, Request
@@ -17,11 +19,25 @@ from resumeforge.data import store
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
+# ---------------------------------------------------------------------------
+# Lifecycle
+# ---------------------------------------------------------------------------
+
+
+@asynccontextmanager
+async def lifespan(application: FastAPI) -> AsyncGenerator[None, None]:
+    store.init_data_dir()
+    logger.info("ResumeForge engine started.")
+    yield
+
+
 # ---------------------------------------------------------------------------
 # App
 # ---------------------------------------------------------------------------
 
 app = FastAPI(
+    lifespan=lifespan,
     title="ResumeForge Engine",
     description="Core engine API for the ResumeForge platform.",
     version="0.1.0",
@@ -99,17 +115,6 @@ async def root() -> StatusResponse:
 async def health() -> StatusResponse:
     """Health check endpoint."""
     return StatusResponse(status="ok", version="0.1.0")
-
-
-# ---------------------------------------------------------------------------
-# Lifecycle
-# ---------------------------------------------------------------------------
-
-
-@app.on_event("startup")
-async def startup() -> None:
-    store.init_data_dir()
-    logger.info("ResumeForge engine started.")
 
 
 # ---------------------------------------------------------------------------

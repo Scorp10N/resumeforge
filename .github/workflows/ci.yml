@@ -23,7 +23,7 @@ jobs:
         run: make test-engine
 
   cli:
-    name: CLI (lint + test)
+    name: CLI (lint + test + build)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -34,9 +34,11 @@ jobs:
         run: make lint-cli
       - name: Test
         run: make test-cli
+      - name: Build
+        run: cd cli && go build ./...
 
   web:
-    name: Web (type check)
+    name: Web (type check + build)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -47,3 +49,5 @@ jobs:
         run: cd web && npm install
       - name: Type check
         run: make test-web
+      - name: Build
+        run: cd web && npm run build

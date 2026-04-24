@@ -1,8 +1,28 @@
 # ResumeForge
 
+[![CI](https://github.com/Scorp10N/resumeforge/actions/workflows/ci.yml/badge.svg)](https://github.com/Scorp10N/resumeforge/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/version-v0.1.0-blue)](https://github.com/Scorp10N/resumeforge/releases/tag/v0.1.0)
+[![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue)](https://python.org)
+
 Open-source resume automation platform — build, tailor, and export resumes for specific roles, with optional AI assistance.
 
 **Stack:** Python engine · Go CLI/TUI · SvelteKit web frontend
+
+---
+
+## Features
+
+- **5 resume templates** — classic, modern, minimal, executive (PDF/MD), web/cyber (browser + GitHub Pages)
+- **AI tailoring** via LiteLLM — any provider: OpenAI, Anthropic, Ollama, LM Studio
+- **PDF + Markdown export** — WeasyPrint-powered, print-ready
+- **5 analysis modules** — ATS keyword score, skill gap, quantification, readability, grammar
+- **GitHub profile import** — pinned repos, stats, readme → projects section
+- **GitHub Pages deploy** — one-command publish of the `web` template
+- **Bilingual support** — English + Hebrew (RTL aware)
+- **CLI + TUI** — Go binary, auto-spawns engine; Bubble Tea terminal UI
+- **Web UI** — SvelteKit frontend with SSE streaming for build/analyze progress
+- **REST API** — FastAPI engine at `localhost:8080`; full Swagger UI at `/docs`
 
 ---
 
@@ -10,7 +30,7 @@ Open-source resume automation platform — build, tailor, and export resumes for
 
 | Directory | Language | Description |
 |-----------|----------|-------------|
-| `engine/` | Python 3.12 (FastAPI, Pydantic v2) | Core engine: REST API, AI tailoring, export (MD/PDF/DOCX), analysis |
+| `engine/` | Python 3.12 (FastAPI, Pydantic v2) | Core engine: REST API, AI tailoring, export (MD/PDF), analysis |
 | `cli/` | Go (Cobra + Bubble Tea) | Standalone CLI and terminal TUI — single binary distribution |
 | `web/` | TypeScript (SvelteKit + Svelte 5) | Web frontend — communicates with engine via REST + SSE |
 
@@ -24,80 +44,105 @@ All clients talk to the engine over HTTP. See [DESIGN.md](ResumeForge_DESIGN.md)
 |------|---------|---------|
 | Python | 3.12+ | [python.org](https://python.org) |
 | uv | latest | `curl -LsSf https://astral.sh/uv/install.sh \| sh` |
-| Go | 1.21+ | [go.dev/dl](https://go.dev/dl/) |
+| Go | 1.22+ | [go.dev/dl](https://go.dev/dl/) |
 | Node.js | 20+ | [nodejs.org](https://nodejs.org) or `nvm install 20` |
 
 ---
 
-## Quick Start
+## Installation
 
 ```bash
-# 1. Engine
+git clone https://github.com/Scorp10N/resumeforge.git
+cd resumeforge
+
+# Engine (Python)
 cd engine
 uv sync --extra dev
-uv run uvicorn resumeforge.api.app:app --reload --port 8080
+uv run uvicorn resumeforge.api.app:app --port 8080
 
-# 2. Web frontend (new terminal)
+# CLI (Go) — in a separate terminal, from repo root
+cd cli
+go build -o resumeforge ./...
+./resumeforge --help
+
+# Web (Node) — in a separate terminal, from repo root
 cd web
 npm install
 npm run dev   # http://localhost:5173
+```
 
-# 3. CLI (new terminal)
-cd cli
-go build -o resumeforge ./...
-./resumeforge build --template classic --format md
+Or start engine + web together:
+
+```bash
+make dev   # engine (8080) + web (5173) — Ctrl+C stops both
 ```
 
 ---
 
-## Interactive Testing
+## Testing All Features
 
-Start all services together:
+### 1. Engine API (Swagger UI)
+
 ```bash
-make dev   # engine (port 8080) + web (port 5173) — Ctrl+C stops both
+# Start engine
+cd engine && uv run uvicorn resumeforge.api.app:app --port 8080
 ```
 
-Or individually:
+Open **http://localhost:8080/docs** and exercise:
+- `POST /api/build` — build resume to Markdown/PDF
+- `GET /api/templates` — list all 5 templates
+- `POST /api/analyze` — run quality analysis (ATS score, gaps, readability)
+- `GET/POST /api/jobs` — manage job descriptions
+- `PUT /api/data/profile` — update resume profile
+- `GET /api/data/export` — export all data as ZIP backup
+
+### 2. Web UI
+
 ```bash
-make dev-engine   # http://localhost:8080
-make dev-web      # http://localhost:5173
+cd web && npm run dev   # http://localhost:5173
 ```
 
-### Engine — Swagger UI
-Open **http://localhost:8080/docs** in your browser.
-- `POST /api/build` — build a resume
-- `GET /api/templates` — list available templates
-- `POST /api/analyze` — run quality analysis
-- `GET /api/jobs` — list saved job descriptions
+Routes to exercise:
+- `/` — Dashboard with data overview
+- `/builder` — build with template selector, format picker, SSE progress
+- `/analyze` — ATS score and section breakdown
+- `/data/experience` — edit experience bullets inline
+- `/templates` — template gallery
+- `/jobs` — save and manage job descriptions
+- `/settings` — configure AI provider (OpenAI, Anthropic, Ollama)
 
-### Web Frontend
-Open **http://localhost:5173**. Routes:
-- `/` — Dashboard
-- `/builder` — Build resume with template/format/job selector and SSE progress
-- `/analyze` — Analysis report with ATS score
-- `/data/[section]` — Edit resume sections (experience, skills, education...)
-- `/templates` — Template gallery
-- `/jobs` — Saved job descriptions
-- `/settings` — AI and engine configuration
+### 3. CLI
 
-### CLI
 ```bash
-./resumeforge --help
+cd cli && go build -o resumeforge ./...
+
 ./resumeforge build --template classic --format md
-./resumeforge build --template classic --format docx --job <slug>
+./resumeforge build --template executive --format pdf --job <slug>
 ./resumeforge analyze
 ./resumeforge analyze --job <slug>
 ./resumeforge templates list
 ./resumeforge data show experience
 ./resumeforge data export --output backup.zip
 ./resumeforge config set ai.enabled false
+./resumeforge github import --username <handle>
+./resumeforge github deploy --pages --repo owner/repo --template web
 ```
 
-### TUI
+### 4. TUI
+
 ```bash
 ./resumeforge tui
 ```
-Screens: **Dashboard -> Editor -> Job Matcher -> Analysis**. Press `q` or `Ctrl+C` to quit.
+
+Navigate: **Dashboard → Editor → Job Matcher → Analysis**. Press `q` or `Ctrl+C` to quit.
+
+### 5. GitHub Pages Deploy
+
+```bash
+curl -X POST http://localhost:8080/api/integrations/github/pages/deploy \
+  -H "Content-Type: application/json" \
+  -d '{"repo":"owner/resume","branch":"gh-pages","template":"web","locale":"en"}'
+```
 
 ---
 
@@ -109,8 +154,9 @@ make lint       # ruff + mypy + go vet + svelte-check
 ```
 
 Or individually:
+
 ```bash
-make test-engine    # pytest (243 tests)
+make test-engine    # pytest (258 tests)
 make test-cli       # go test
 make test-web       # svelte-check
 make test-integration  # E2E cross-component (auto-starts engine)
@@ -122,15 +168,18 @@ See [tests/README.md](tests/README.md) for the full testing guide.
 
 ## Development
 
-See component READMEs for detailed dev guides:
-- [engine/README.md](engine/README.md)
-- [cli/README.md](cli/README.md)
-- [web/README.md](web/README.md)
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, branching, and PR conventions.
 
 See [DESIGN.md](ResumeForge_DESIGN.md) for architecture, data model, and API contract.
 
 ---
 
+## Security
+
+See [docs/SECURITY.md](docs/SECURITY.md) for the STRIDE threat model and vulnerability reporting.
+
+---
+
 ## License
 
-MIT
+[MIT](LICENSE) — Copyright © 2026 Yarin M (Scorp10N)
