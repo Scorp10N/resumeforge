@@ -25,15 +25,15 @@ builds:
 
 archives:
   - id: resumeforge
-    builds:
+    build_ids:
       - resumeforge
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     format_overrides:
       - goos: windows
-        format: zip
+        formats:
+          - zip
     files:
       - README.md
-      - ../CLAUDE.md
 
 checksum:
   name_template: "checksums.txt"
