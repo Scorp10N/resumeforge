@@ -266,6 +266,28 @@ class AIConfig(BaseModel):
     temperature: float = 0.3
     enabled: bool = False
 
+    @field_validator("base_url", mode="before")
+    @classmethod
+    def _validate_base_url(cls, v: object) -> object:
+        if v is None:
+            return v
+        if not isinstance(v, str):
+            raise ValueError("base_url must be a string or null")
+        import ipaddress
+        from urllib.parse import urlparse
+        parsed = urlparse(v)
+        if parsed.scheme not in ("http", "https"):
+            raise ValueError("base_url must use http or https scheme")
+        host = parsed.hostname or ""
+        try:
+            addr = ipaddress.ip_address(host)
+            if addr.is_private and not addr.is_loopback:
+                raise ValueError("base_url must not target private IP ranges")
+        except ValueError as exc:
+            if "base_url" in str(exc) or "private" in str(exc):
+                raise
+        return v
+
     @field_validator("temperature", mode="before")
     @classmethod
     def validate_temperature(cls, v: object) -> object:

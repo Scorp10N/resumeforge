@@ -48,9 +48,15 @@ async def patch_config(patch: MetaPatch) -> Meta:
         current["default_format"] = patch.default_format
 
     # Apply nested dict merges
+    _ALLOWED: dict[str, set[str]] = {
+        "ai": {"model", "temperature", "enabled", "base_url", "provider"},
+        "engine": {"port", "mode"},
+        "style": {"tone", "max_pages", "bullet_style", "avoid_tool_names_in_bullets"},
+    }
     for key, value in [("engine", patch.engine), ("ai", patch.ai), ("style", patch.style)]:
         if value is not None:
-            current[key] = {**current.get(key, {}), **value}
+            filtered = {k: v for k, v in value.items() if k in _ALLOWED[key]}
+            current[key] = {**current.get(key, {}), **filtered}
 
     updated = Meta.model_validate(current)
     store.save_meta(updated)

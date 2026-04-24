@@ -71,8 +71,10 @@ async def preview_template(name: str) -> Response:
     Returns a PDF if available, otherwise falls back to the Markdown sample.
     Returns 404 if the template does not exist.
     """
-    templates_root = _templates_root()
-    template_dir = templates_root / name
+    templates_root = _templates_root().resolve()
+    template_dir = (templates_root / name).resolve()
+    if not str(template_dir).startswith(str(templates_root) + "/"):
+        raise not_found("Template", name)
     if not template_dir.exists():
         raise not_found("Template", name)
 

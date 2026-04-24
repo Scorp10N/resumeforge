@@ -8,7 +8,7 @@ from pathlib import Path
 from fastapi import APIRouter, Query
 from fastapi.responses import FileResponse
 
-from resumeforge.api.errors import not_found
+from resumeforge.api.errors import bad_request, not_found
 from resumeforge.api.models import ImportResponse
 from resumeforge.data import store
 from resumeforge.data.schema import (
@@ -148,7 +148,10 @@ async def export_backup() -> FileResponse:
 @router.post("/import", response_model=ImportResponse)
 async def import_backup(archive_path: str = Query(..., description="Absolute path to backup archive")) -> ImportResponse:
     """Restore data from a backup archive."""
-    path = Path(archive_path)
+    path = Path(archive_path).resolve()
+    allowed_root = store.OUTPUT_DIR.resolve()
+    if not str(path).startswith(str(allowed_root) + "/"):
+        raise bad_request(f"archive_path must be inside {allowed_root}", code="PATH_NOT_ALLOWED")
     if not path.exists():
         raise not_found("Archive", archive_path)
     restored = store.import_backup(path)

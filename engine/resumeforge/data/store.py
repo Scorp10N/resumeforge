@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import contextlib
 import json
+import logging
 import zipfile
 from pathlib import Path
 from typing import TypeVar
@@ -20,6 +21,8 @@ from resumeforge.data.schema import (
     Projects,
     Skills,
 )
+
+logger = logging.getLogger(__name__)
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -196,14 +199,18 @@ def import_backup(archive_path: Path) -> list[str]:
     """Restore data from a backup zip. Returns list of restored files."""
     _ensure_dirs()
     restored: list[str] = []
+    data_root = DATA_DIR.resolve()
     with zipfile.ZipFile(archive_path, "r") as zf:
         for name in zf.namelist():
-            if name.startswith("data/") and name.endswith(".json"):
-                relative = Path(name)
-                dest = DATA_DIR.parent / relative
-                dest.parent.mkdir(parents=True, exist_ok=True)
-                dest.write_bytes(zf.read(name))
-                restored.append(name)
+            if not (name.startswith("data/") and name.endswith(".json")):
+                continue
+            dest = (DATA_DIR.parent / Path(name)).resolve()
+            if not str(dest).startswith(str(data_root) + "/"):
+                logger.warning("Skipping unsafe zip entry: %s", name)
+                continue
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            dest.write_bytes(zf.read(name))
+            restored.append(name)
     return restored
 
 
