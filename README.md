@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/Scorp10N/resumeforge/actions/workflows/ci.yml/badge.svg)](https://github.com/Scorp10N/resumeforge/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-v0.1.0-blue)](https://github.com/Scorp10N/resumeforge/releases/tag/v0.1.0)
+[![Version](https://img.shields.io/badge/version-v0.2.0-blue)](https://github.com/Scorp10N/resumeforge/releases/tag/v0.2.0)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue)](https://python.org)
 
 Open-source resume automation platform — build, tailor, and export resumes for specific roles, with optional AI assistance.
@@ -53,14 +53,29 @@ All clients talk to the engine over HTTP. See [DESIGN.md](ResumeForge_DESIGN.md)
 
 ### Docker (recommended — no local installs needed)
 
+**Option A — Pull pre-built images (fastest):**
+
 ```bash
 git clone https://github.com/Scorp10N/resumeforge.git
 cd resumeforge
 cp .env.example .env          # edit VITE_ENGINE_URL for remote deploys
-docker compose up             # builds images and starts everything
+
+# Pull from GitHub Container Registry and start
+docker pull ghcr.io/scorp10n/resumeforge-engine:latest
+docker pull ghcr.io/scorp10n/resumeforge-web:latest
+docker compose up             # uses pulled images
 
 # Engine API + Swagger UI → http://localhost:8080/docs
 # Web UI                  → http://localhost:3000
+```
+
+**Option B — Build locally:**
+
+```bash
+git clone https://github.com/Scorp10N/resumeforge.git
+cd resumeforge
+cp .env.example .env
+docker compose up --build     # builds images from source
 ```
 
 Data persists in Docker volumes (`engine_data`, `engine_output`). Use `make docker-clean` to wipe.

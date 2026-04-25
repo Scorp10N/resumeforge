@@ -41,7 +41,7 @@ app = FastAPI(
     lifespan=lifespan,
     title="ResumeForge Engine",
     description="Core engine API for the ResumeForge platform.",
-    version="0.1.0",
+    version="0.2.0",
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_tags=[
@@ -122,13 +122,13 @@ async def api_error_handler(request: Request, exc: APIError) -> JSONResponse:
 @app.get("/", tags=["Health"], response_model=StatusResponse)
 async def root() -> StatusResponse:
     """Service root — confirms the engine is running."""
-    return StatusResponse(status="ok", version="0.1.0")
+    return StatusResponse(status="ok", version="0.2.0")
 
 
 @app.get("/health", tags=["Health"], response_model=StatusResponse)
 async def health() -> StatusResponse:
     """Health check endpoint."""
-    return StatusResponse(status="ok", version="0.1.0")
+    return StatusResponse(status="ok", version="0.2.0")
 
 
 # ---------------------------------------------------------------------------
