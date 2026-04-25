@@ -20,5 +20,4 @@ jobs:
       has_go: true
       has_node: true
       has_containers: true
-      codeql_languages: '["python","go","javascript-typescript"]'
     secrets: inherit
