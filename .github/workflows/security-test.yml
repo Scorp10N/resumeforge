@@ -1,0 +1,9 @@
+name: Security-Test
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    uses: Scorp10N/devsecops/.github/workflows/security-all.yml@main
