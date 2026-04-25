@@ -45,3 +45,4 @@ web/.env.*
 .DS_Store
 Thumbs.db
 .worktrees/
+.superpowers/

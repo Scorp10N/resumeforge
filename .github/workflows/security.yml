@@ -9,96 +9,16 @@ on:
     - cron: '0 6 * * 1'   # weekly Monday 6am UTC
 
 jobs:
-  secrets:
-    name: Secret scanning (TruffleHog)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: trufflesecurity/trufflehog@main
-        with:
-          path: ./
-          base: ${{ github.event.repository.default_branch }}
-          head: HEAD
-          extra_args: --only-verified
-
-  deps:
-    name: Dependency vulnerabilities
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v4
-        with:
-          version: "latest"
-      - uses: actions/setup-go@v5
-        with:
-          go-version: "1.22"
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      - name: Python — pip-audit
-        run: |
-          cd engine
-          uv sync --extra dev
-          uv run pip-audit
-
-      - name: Go — govulncheck
-        run: |
-          go install golang.org/x/vuln/cmd/govulncheck@latest
-          cd cli && govulncheck ./...
-
-      - name: npm — audit
-        run: cd web && npm install && npm audit --audit-level=critical
-
-  containers:
-    name: Container scanning (Trivy)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Build engine image
-        run: docker build ./engine -t resumeforge-engine:scan
-
-      - name: Scan engine image
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: resumeforge-engine:scan
-          format: table
-          exit-code: '1'
-          severity: CRITICAL,HIGH
-          ignore-unfixed: true
-
-      - name: Build web image
-        run: docker build --build-arg VITE_ENGINE_URL=http://localhost:8080 ./web -t resumeforge-web:scan
-
-      - name: Scan web image
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: resumeforge-web:scan
-          format: table
-          exit-code: '1'
-          severity: CRITICAL,HIGH
-          ignore-unfixed: true
-
-  sast:
-    name: Static analysis (CodeQL)
-    runs-on: ubuntu-latest
-    permissions:
-      actions: read
-      contents: read
-      security-events: write
-    strategy:
-      fail-fast: false
-      matrix:
-        language: [python, go, javascript-typescript]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: github/codeql-action/init@v3
-        with:
-          languages: ${{ matrix.language }}
-      - uses: github/codeql-action/autobuild@v3
-      - uses: github/codeql-action/analyze@v3
-        with:
-          category: "/language:${{ matrix.language }}"
+  security:
+    uses: Scorp10N/devsecops/.github/workflows/security-all.yml@main
+    with:
+      engine_dockerfile: "./engine"
+      web_dockerfile: "./web"
+      web_build_args: "VITE_ENGINE_URL=http://localhost:8080"
+      go_version: "1.22"
+      node_version: "20"
+      has_go: true
+      has_node: true
+      has_containers: true
+      codeql_languages: '["python","go","javascript-typescript"]'
+    secrets: inherit

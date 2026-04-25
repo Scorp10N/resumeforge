@@ -1,0 +1,9 @@
+# All changes require @Scorp10N review
+*                           @Scorp10N
+
+/.github/workflows/         @Scorp10N
+/engine/resumeforge/api/    @Scorp10N
+/engine/resumeforge/auth/   @Scorp10N
+/engine/pyproject.toml      @Scorp10N
+/cli/go.mod                 @Scorp10N
+/web/package.json           @Scorp10N
