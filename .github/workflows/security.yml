@@ -8,6 +8,11 @@ on:
   schedule:
     - cron: '0 6 * * 1'   # weekly Monday 6am UTC
 
+permissions:
+  actions: read
+  contents: read
+  security-events: write
+
 jobs:
   security:
     uses: Scorp10N/devsecops/.github/workflows/security-all.yml@main
@@ -20,5 +25,4 @@ jobs:
       has_go: true
       has_node: true
       has_containers: true
-      codeql_languages: '["python","go","javascript-typescript"]'
     secrets: inherit
