@@ -20,7 +20,7 @@ jobs:
       engine_dockerfile: "./engine"
       web_dockerfile: "./web"
       web_build_args: "VITE_ENGINE_URL=http://localhost:8080"
-      go_version: "1.22"
+      go_version: "1.25"
       node_version: "20"
       has_go: true
       has_node: true
