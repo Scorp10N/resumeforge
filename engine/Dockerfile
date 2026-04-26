@@ -5,7 +5,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libcairo2-dev libpango1.0-dev libglib2.0-dev \
     libpixman-1-dev libfontconfig1-dev libfreetype6-dev \
     && rm -rf /var/lib/apt/lists/*
-RUN pip install uv
+RUN pip install --upgrade pip uv
 WORKDIR /app
 COPY pyproject.toml uv.lock README.md ./
 RUN uv sync --frozen --no-dev
@@ -19,6 +19,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libgdk-pixbuf-2.0-0 shared-mime-info \
     fonts-dejavu fonts-liberation \
     && rm -rf /var/lib/apt/lists/*
+RUN pip install --upgrade pip && \
+    python -m pip uninstall pip setuptools wheel -y 2>/dev/null || true
 RUN useradd -m -u 1000 appuser
 COPY --from=builder /app /app
 WORKDIR /app
