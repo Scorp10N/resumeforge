@@ -46,8 +46,8 @@ _GRAMMAR_SYSTEM = (
     "Analyse the provided resume text for grammar errors, spelling mistakes, "
     "inconsistent tense, weak phrasing, and language quality issues. "
     "Return a JSON array of objects with keys: "
-    '\"issue\" (string), \"severity\" (\"error\"|\"warning\"|\"info\"), '
-    '\"suggestion\" (string). '
+    '"issue" (string), "severity" ("error"|"warning"|"info"), '
+    '"suggestion" (string). '
     "Return ONLY the JSON array, no prose."
 )
 
@@ -76,8 +76,10 @@ class GrammarAnalyzer(BaseAnalyzer):
 
         # Score: start at 1.0, deduct per severity
         deduction = sum(
-            0.15 if f.severity == Severity.ERROR
-            else 0.07 if f.severity == Severity.WARNING
+            0.15
+            if f.severity == Severity.ERROR
+            else 0.07
+            if f.severity == Severity.WARNING
             else 0.02
             for f in findings
         )
@@ -96,6 +98,7 @@ class GrammarAnalyzer(BaseAnalyzer):
 # Offline heuristic helpers
 # ---------------------------------------------------------------------------
 
+
 def _offline_checks(context: ResumeContext) -> list[Finding]:
     findings: list[Finding] = []
 
@@ -111,45 +114,53 @@ def _offline_checks(context: ResumeContext) -> list[Finding]:
         # First-person pronouns
         match = _FIRST_PERSON_RE.search(text)
         if match:
-            findings.append(Finding(
-                message=f'First-person pronoun "{match.group()}" in bullet: "{text[:60]}"',
-                severity=Severity.WARNING,
-                field=field,
-                suggestion="Rewrite without first-person pronouns (e.g. 'Designed...' not 'I designed...').",
-            ))
+            findings.append(
+                Finding(
+                    message=f'First-person pronoun "{match.group()}" in bullet: "{text[:60]}"',
+                    severity=Severity.WARNING,
+                    field=field,
+                    suggestion="Rewrite without first-person pronouns (e.g. 'Designed...' not 'I designed...').",
+                )
+            )
 
         # Weak phrases
         for pattern in _WEAK_PHRASE_RES:
             weak = pattern.search(text)
             if weak:
-                findings.append(Finding(
-                    message=f'Weak phrase "{weak.group()}" in bullet: "{text[:60]}"',
-                    severity=Severity.WARNING,
-                    field=field,
-                    suggestion="Replace with a strong action verb and specific outcome.",
-                ))
+                findings.append(
+                    Finding(
+                        message=f'Weak phrase "{weak.group()}" in bullet: "{text[:60]}"',
+                        severity=Severity.WARNING,
+                        field=field,
+                        suggestion="Replace with a strong action verb and specific outcome.",
+                    )
+                )
                 break  # one warning per bullet is enough
 
         # Passive voice
         passive = _PASSIVE_RE.search(text)
         if passive:
-            findings.append(Finding(
-                message=f'Possible passive voice in bullet: "{text[:60]}"',
-                severity=Severity.INFO,
-                field=field,
-                suggestion="Prefer active voice: start with a strong past-tense action verb.",
-            ))
+            findings.append(
+                Finding(
+                    message=f'Possible passive voice in bullet: "{text[:60]}"',
+                    severity=Severity.INFO,
+                    field=field,
+                    suggestion="Prefer active voice: start with a strong past-tense action verb.",
+                )
+            )
 
     # Check summary for first-person
     if context.profile.summary:
         match = _FIRST_PERSON_RE.search(context.profile.summary)
         if match:
-            findings.append(Finding(
-                message=f'First-person pronoun "{match.group()}" in summary.',
-                severity=Severity.WARNING,
-                field="profile.summary",
-                suggestion="Write the summary in third-person implied (no 'I', 'my', etc.).",
-            ))
+            findings.append(
+                Finding(
+                    message=f'First-person pronoun "{match.group()}" in summary.',
+                    severity=Severity.WARNING,
+                    field="profile.summary",
+                    suggestion="Write the summary in third-person implied (no 'I', 'my', etc.).",
+                )
+            )
 
     return findings
 
@@ -163,7 +174,7 @@ def _ai_checks(context: ResumeContext, ai_provider: object | None) -> list[Findi
     if not (hasattr(ai_provider, "enabled") and hasattr(ai_provider, "complete")):
         return []
 
-    if not ai_provider.enabled:  # type: ignore[attr-defined]
+    if not ai_provider.enabled:
         return []
 
     # Build a compact resume text for the AI to inspect
@@ -176,7 +187,7 @@ def _ai_checks(context: ResumeContext, ai_provider: object | None) -> list[Findi
             lines.append(f"  - {b.text}")
     resume_text = "\n".join(lines)
 
-    raw = ai_provider.complete(  # type: ignore[attr-defined]
+    raw = ai_provider.complete(
         prompt=f"Review this resume text for language quality:\n\n{resume_text}",
         system=_GRAMMAR_SYSTEM,
         temperature=0.2,
@@ -218,10 +229,12 @@ def _parse_ai_response(raw: str) -> list[Finding]:
             sev = Severity.INFO
 
         if issue:
-            findings.append(Finding(
-                message=issue,
-                severity=sev,
-                suggestion=suggestion or None,
-            ))
+            findings.append(
+                Finding(
+                    message=issue,
+                    severity=sev,
+                    suggestion=suggestion or None,
+                )
+            )
 
     return findings
