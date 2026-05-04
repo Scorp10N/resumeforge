@@ -11,6 +11,9 @@
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
 	},
+	"engines": {
+		"node": ">=20.19.0"
+	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "^7.0.0",
 		"@sveltejs/adapter-node": "^5.5.4",
@@ -21,6 +24,6 @@
 		"svelte-check": "^4.4.7",
 		"tailwindcss": "^4.1.18",
 		"typescript": "^6.0.3",
-		"vite": "^7.3.1"
+		"vite": "^8.0.10"
 	}
 }
