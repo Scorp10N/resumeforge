@@ -1,0 +1,23 @@
+[template]
+name = "Formal Bars"
+description = "Formal single-column layout with gray divider bars and a pale blue contact header"
+author = "ResumeForge"
+version = "1.0"
+supported_formats = ["md", "pdf"]
+max_pages = 2
+ats_friendly = true
+
+[style]
+font_family = "Arial, Calibri, sans-serif"
+font_size_body = 10
+font_size_heading = 10
+margin_top = 0.65
+margin_sides = 0.55
+color_primary = "#111111"
+color_accent = "#86A6E8"
+color_text = "#000000"
+color_rule = "#B8B8B8"
+color_ribbon = "#DDECC6"
+
+[sections]
+order = ["header", "summary", "experience", "skills", "education", "projects", "certifications"]

@@ -1,0 +1,82 @@
+# {{ profile.name }}
+
+{% if profile.phone or profile.email or profile.linkedin or profile.github or profile.website or profile.location %}
+{{ [profile.phone, profile.email, profile.linkedin, profile.github, profile.website, profile.location] | select | join(' | ') }}
+{% endif %}
+
+---
+{% if profile.summary %}
+
+## PROFILE
+
+{% for line in profile.summary.splitlines() if line.strip() %}
+- {{ line.strip() }}
+{% else %}
+- {{ profile.summary }}
+{% endfor %}
+{% endif %}
+
+---
+
+## EXPERIENCE
+
+{% for pos in experience.positions | sort(attribute='priority') %}
+### {{ pos.company }} | {{ format_date(pos.start_date, locale) }}–{{ _("Present") if pos.is_current else (format_date(pos.end_date, locale) or "") }}
+**{{ pos.title }}**{% if pos.location %} — {{ pos.location }}{% endif %}
+
+{% for bullet in pos.bullets %}
+- {{ bullet.text }}
+{% endfor %}
+
+{% endfor %}
+{% if skills.categories %}
+
+---
+
+## SKILLS
+
+{% for cat in skills.categories | sort(attribute='priority') %}
+**{{ cat.label }}:** {{ cat.items | join(', ') }}
+{% endfor %}
+{% endif %}
+{% if education.entries %}
+
+---
+
+## EDUCATION
+
+{% for edu in education.entries | sort(attribute='priority') %}
+**{{ edu.degree }}{% if edu.field %} in {{ edu.field }}{% endif %}** — {{ edu.institution }}
+{{ format_date(edu.start_date, locale) }}–{{ format_date(edu.end_date, locale) or _("Present") }}{% if edu.location %} | {{ edu.location }}{% endif %}
+{% for note in edu.notes %}
+- {{ note }}
+{% endfor %}
+
+{% endfor %}
+{% endif %}
+{% if projects.projects %}
+
+---
+
+## PROJECTS
+
+{% for proj in projects.projects | sort(attribute='priority') %}
+### {{ proj.name }}{% if proj.technologies %} ({{ proj.technologies | join(', ') }}){% endif %}
+{{ proj.description }}
+{% for bullet in proj.bullets %}
+- {{ bullet.text }}
+{% endfor %}
+{% if proj.url %}{{ proj.url }}{% endif %}
+
+{% endfor %}
+{% endif %}
+{% if certifications.certifications %}
+
+---
+
+## CERTIFICATIONS
+
+{% for cert in certifications.certifications %}
+- **{{ cert.name }}** — {{ cert.issuer }} ({{ cert.date }}){% if cert.expiry %}; Expires {{ cert.expiry }}{% endif %}
+{% endfor %}
+{% endif %}
