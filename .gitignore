@@ -46,3 +46,4 @@ web/.env.*
 Thumbs.db
 .worktrees/
 .superpowers/
+.codex
