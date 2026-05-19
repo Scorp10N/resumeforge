@@ -1,0 +1,15 @@
+# TruffleHog configuration for Scorp10N repos
+# Format: proto text (protobuf TextProto) — NOT TOML despite the extension
+
+# Only report secrets with active verification (real credentials, not test data)
+only_verified: true
+
+# Paths to skip — lock files, vendored deps, test fixtures
+exclude_paths: ".*\\.lock$"
+exclude_paths: ".*vendor/.*"
+exclude_paths: ".*node_modules/.*"
+exclude_paths: ".*\\.venv/.*"
+exclude_paths: ".*\\.worktrees/.*"
+# Test snapshots/fixtures may contain dummy tokens for test assertions
+exclude_paths: ".*tests/.*snapshots/.*"
+exclude_paths: ".*tests/.*fixtures/.*"
