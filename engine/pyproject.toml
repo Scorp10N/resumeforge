@@ -15,7 +15,7 @@ dependencies = [
     "uvicorn[standard]>=0.30.0",
     "python-multipart>=0.0.27",
     # Data
-    "pydantic>=2.7.0",
+    "pydantic>=2.13.4",
     "pydantic-settings>=2.3.0",
     # AI
     "litellm>=1.83.7",
