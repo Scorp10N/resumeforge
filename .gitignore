@@ -46,3 +46,6 @@ web/.env.*
 Thumbs.db
 .worktrees/
 .superpowers/
+
+# CodeGraph local index (machine-specific, regenerable)
+.codegraph/
